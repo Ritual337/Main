@@ -205,18 +205,19 @@
 
         <!-- ===== dashboard ===== -->
         <section class="dash" id="dashboard" hidden>
-            <div class="dash-head">
-                <div>
-                    <div class="eyebrow"><span class="eyebrow-mark">Admin</span><span class="eyebrow-text">Guestbook moderation</span><span class="eyebrow-line"></span></div>
-                    <h1>Control room.</h1>
-                </div>
-                <div class="dash-session">
-                    <span class="session-dot"></span>
-                    <span id="session-timer">session —</span>
-                    <a href="guestbook.html" target="_blank" rel="noopener" class="dash-btn ghost">View live guestbook <i class="fas fa-arrow-up-right-from-square"></i></a>
-                    <button class="dash-btn" id="logout-btn">Log out</button>
-                </div>
-            </div>
+<div class="dash-head">
+    <div>
+        <div class="eyebrow"><span class="eyebrow-mark">Admin</span><span class="eyebrow-text">Guestbook moderation</span><span class="eyebrow-line"></span></div>
+        <h1>Control room.</h1>
+    </div>
+          <div class="dash-session">
+              <button class="dash-btn" id="refresh-dash-btn"><i class="fas fa-rotate"></i> Refresh</button>
+               <span class="session-dot"></span>
+               <span id="session-timer">session —</span>
+               <a href="guestbook.html" target="_blank" rel="noopener" class="dash-btn ghost">View live guestbook <i class="fas fa-arrow-up-right-from-square"></i></a>
+               <button class="dash-btn" id="logout-btn">Log out</button>
+              </div>
+          </div>
 
             <div class="stat-row">
                 <div class="stat-card"><span class="stat-num" id="stat-total">0</span><span class="stat-label">Total entries</span></div>
@@ -241,7 +242,11 @@
             </div>
 
             <div class="panel">
-                <div class="panel-head"><i class="fas fa-clock-rotate-left"></i><span>Activity log</span></div>
+                <div class="panel-head">
+                    <i class="fas fa-clock-rotate-left"></i>
+                    <span>Activity log</span>
+                    <button class="dash-btn danger small" id="clear-audit-btn">Clear log</button>
+                </div>
                 <div class="audit-list" id="audit-list"></div>
             </div>
         </section>

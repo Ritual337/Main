@@ -374,4 +374,24 @@
         // Always show login – no setup form anymore
         showLogin();
     })();
+
+    document.getElementById('refresh-dash-btn').addEventListener('click', () => {
+        refreshDashboard();
+        window.showToast?.('Refreshed.');
+    });
+
+    // ---- Clear activity log --------------------------------------------
+document.getElementById('clear-audit-btn').addEventListener('click', () => {
+    const entries = readJSON(localStorage, AUDIT_KEY, []);
+    if (entries.length === 0) {
+        window.showToast?.('Activity log is already empty.');
+        return;
+    }
+    const sure = confirm('Clear the admin activity log? This cannot be undone.');
+    if (!sure) return;
+    localStorage.removeItem(AUDIT_KEY);
+    window.showToast?.('Activity log cleared.');
+    renderAuditLog();
+});
+
 })();
