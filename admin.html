@@ -225,7 +225,7 @@
             </div>
 
             <div class="panel backend-panel">
-                <div class="panel-head"><i class="fas fa-server"></i><span>Backend status</span><span class="badge" id="backend-badge">Connected via D1</span></div>
+                <div class="panel-head"><i class="fas fa-server"></i><span>Backend status</span><span class="badge" id="backend-badge" style="color: #3ecf6e; background: rgba(62,207,110,0.12);">Connected</span></div>
                 <p class="panel-copy">Entries are now persisted in a Cloudflare D1 database. <code>guestbook-store.js</code> uses <code>fetch()</code> to call the Pages Functions API endpoints (<code>/api/guestbook</code>, etc.). All entries are shared across devices – no more localStorage silos.</p>
                 <ul class="endpoint-list">
                     <li><span class="verb get">GET</span><code>/api/guestbook</code> – list entries</li>
