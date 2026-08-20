@@ -1,35 +1,21 @@
 /*
  * admin.js — auth gate + dashboard behavior for admin.html.
- *
- * ============================================================================
- * ⚠ SECURITY NOTE — READ THIS BEFORE PUTTING ANYTHING REAL BEHIND THIS PAGE
- * ============================================================================
- * ... (keep your existing security note or shorten it) ...
+ * Uses Cloudflare Pages Functions as the backend (D1 + JWT auth).
  */
 (function () {
     'use strict';
 
-    const SESSION_KEY = 'ritual_admin_session_v1';  // sessionStorage: { token, expiresAt }
-    const LOCKOUT_KEY = 'ritual_admin_lockout_v1';  // sessionStorage: { failCount, lockedUntil }
-    const AUDIT_KEY = 'ritual_admin_audit_v1';      // localStorage: [{ action, detail, at }, ...]
+    const SESSION_KEY = 'ritual_admin_session_v1';
+    const LOCKOUT_KEY = 'ritual_admin_lockout_v1';
+    const AUDIT_KEY = 'ritual_admin_audit_v1';
 
-    const SESSION_MS = 30 * 60 * 1000;   // auto-logout after 30 minutes
-    const LOCKOUT_AFTER = 5;             // failed attempts before cooldown
-    const LOCKOUT_MS = 60 * 1000;        // cooldown length
+    const SESSION_MS = 30 * 60 * 1000;
+    const LOCKOUT_AFTER = 5;
+    const LOCKOUT_MS = 60 * 1000;
     const AUDIT_MAX = 50;
 
     // ---- low-level helpers ---------------------------------------------
 
-    async function sha256Hex(str) {
-        const bytes = new TextEncoder().encode(str);
-        const digest = await crypto.subtle.digest('SHA-256', bytes);
-        return Array.from(new Uint8Array(digest)).map((b) => b.toString(16).padStart(2, '0')).join('');
-    }
-    function randomHex(byteLen) {
-        const arr = new Uint8Array(byteLen);
-        crypto.getRandomValues(arr);
-        return Array.from(arr).map((b) => b.toString(16).padStart(2, '0')).join('');
-    }
     function readJSON(storage, key, fallback) {
         try {
             const raw = storage.getItem(key);
@@ -62,7 +48,10 @@
         getSession() {
             const session = readJSON(sessionStorage, SESSION_KEY, null);
             if (!session) return null;
-            if (Date.now() > session.expiresAt) { sessionStorage.removeItem(SESSION_KEY); return null; }
+            if (Date.now() > session.expiresAt) {
+                sessionStorage.removeItem(SESSION_KEY);
+                return null;
+            }
             return session;
         },
 
@@ -76,7 +65,6 @@
             return session ? { Authorization: 'Bearer ' + session.token } : {};
         },
 
-        // ---- lockout ------------------------------------------
         getLockout() {
             return readJSON(sessionStorage, LOCKOUT_KEY, { failCount: 0, lockedUntil: 0 });
         },
@@ -176,6 +164,13 @@
         dashboard.hidden = false;
         await refreshDashboard();
         startSessionTimer();
+        // Auto‑refresh every 30 seconds
+        if (window.dashRefreshInterval) clearInterval(window.dashRefreshInterval);
+        window.dashRefreshInterval = setInterval(() => {
+            if (!dashboard.hidden) {
+                refreshDashboard();
+            }
+        }, 30000);
     }
 
     // ---- login form ------------------------------------------------------
@@ -215,6 +210,10 @@
             const session = AdminAuth.getSession();
             if (!session) {
                 clearInterval(sessionInterval);
+                if (window.dashRefreshInterval) {
+                    clearInterval(window.dashRefreshInterval);
+                    window.dashRefreshInterval = null;
+                }
                 window.showToast?.('Session expired — please log in again.', { error: true });
                 showLogin();
                 return;
@@ -230,6 +229,10 @@
 
     document.getElementById('logout-btn').addEventListener('click', () => {
         clearInterval(sessionInterval);
+        if (window.dashRefreshInterval) {
+            clearInterval(window.dashRefreshInterval);
+            window.dashRefreshInterval = null;
+        }
         AdminAuth.endSession('Logged out');
         showLogin();
     });
@@ -334,6 +337,26 @@
         refreshDashboard();
     });
 
+    // ---- Clear activity log --------------------------------------------
+    document.getElementById('clear-audit-btn').addEventListener('click', () => {
+        const entries = readJSON(localStorage, AUDIT_KEY, []);
+        if (entries.length === 0) {
+            window.showToast?.('Activity log is already empty.');
+            return;
+        }
+        const sure = confirm('Clear the admin activity log? This cannot be undone.');
+        if (!sure) return;
+        localStorage.removeItem(AUDIT_KEY);
+        window.showToast?.('Activity log cleared.');
+        renderAuditLog();
+    });
+
+    // ---- Refresh dashboard button --------------------------------------
+    document.getElementById('refresh-dash-btn').addEventListener('click', () => {
+        refreshDashboard();
+        window.showToast?.('Refreshed.');
+    });
+
     function renderAuditLog() {
         const list = document.getElementById('audit-list');
         const entries = readJSON(localStorage, AUDIT_KEY, []);
@@ -366,33 +389,18 @@
         if (!window.crypto || !window.crypto.subtle) {
             gateLabel.textContent = 'Unavailable';
             gateTitle.textContent = 'Needs HTTPS';
-            gateSub.textContent = 'This panel hashes your password with the Web Crypto API, which browsers only allow on HTTPS (or localhost while developing). Serve the site over HTTPS and reload this page.';
+            gateSub.textContent = 'This panel requires HTTPS (or localhost) for security.';
             authGate.hidden = false;
             dashboard.hidden = true;
             return;
         }
-        // Always show login – no setup form anymore
-        showLogin();
+
+        // Check for existing valid session
+        const session = AdminAuth.getSession();
+        if (session) {
+            showDashboard();
+        } else {
+            showLogin();
+        }
     })();
-
-// ---- Clear activity log --------------------------------------------
-document.getElementById('clear-audit-btn').addEventListener('click', () => {
-    const entries = readJSON(localStorage, AUDIT_KEY, []);
-    if (entries.length === 0) {
-        window.showToast?.('Activity log is already empty.');
-        return;
-    }
-    const sure = confirm('Clear the admin activity log? This cannot be undone.');
-    if (!sure) return;
-    localStorage.removeItem(AUDIT_KEY);
-    window.showToast?.('Activity log cleared.');
-    renderAuditLog();
-});
-
-// ---- Refresh dashboard button --------------------------------------
-document.getElementById('refresh-dash-btn').addEventListener('click', () => {
-    refreshDashboard();
-    window.showToast?.('Refreshed.');
-});
-
 })();
