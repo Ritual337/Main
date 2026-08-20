@@ -1,0 +1,283 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Admin — Ritual</title>
+    <meta name="robots" content="noindex, nofollow" />
+    <meta name="theme-color" content="#0b0a09" />
+    <meta name="color-scheme" content="dark" />
+    <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><rect width=%22100%22 height=%22100%22 rx=%2218%22 fill=%22%230b0a09%22/><text x=%2250%22 y=%2270%22 font-family=%22Georgia, serif%22 font-size=%2262%22 fill=%22%23d81f2f%22 text-anchor=%22middle%22>R</text></svg>" />
+
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link rel="preconnect" href="https://cdnjs.cloudflare.com" />
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css" />
+    <link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=IBM+Plex+Mono:ital,wght@0,400;0,500;0,600;0,700;1,400&family=Source+Serif+4:ital,wght@0,400;0,500;0,600;0,700&display=swap" rel="stylesheet" />
+
+    <!-- Not linked from the public nav or footer on purpose, and blocked from
+         indexing above. Neither of those is real access control — see the
+         security note at the top of admin.js. -->
+    <script src="guestbook-store.js" defer></script>
+    <script src="admin.js" defer></script>
+
+    <style>
+        :root {
+            --bg: #0b0a09; --bg2: #121110; --bg3: #17140f; --bg4: #1c1916;
+            --paper: #efe8d9; --paper-dim: #c9c0ac;
+            --ink: #8c8478; --ink-dim: #5c564c;
+            --red: #d81f2f; --red-bright: #ff3346; --red-deep: #6e0f17;
+            --red-glow: rgba(216, 31, 47, 0.30); --red-glow-strong: rgba(255, 51, 70, 0.55);
+            --green: #3ecf6e;
+            --line: #2a2521; --line-bright: #3c352d;
+            --mono: 'IBM Plex Mono', monospace;
+            --serif: 'Source Serif 4', Georgia, serif;
+            --display: 'Bebas Neue', 'IBM Plex Mono', sans-serif;
+        }
+        *, *::before, *::after { margin: 0; padding: 0; box-sizing: border-box; }
+        html { scrollbar-width: none; -ms-overflow-style: none; }
+        html::-webkit-scrollbar { display: none; }
+        body { background: var(--bg); color: var(--paper-dim); font-family: var(--serif); min-height: 100vh; -webkit-font-smoothing: antialiased; }
+        button { font: inherit; }
+        code { font-family: var(--mono); }
+        :focus-visible { outline: 2px solid var(--red-bright); outline-offset: 3px; border-radius: 1px; }
+        [hidden] { display: none !important; }
+
+        .vignette { position: fixed; inset: 0; pointer-events: none; z-index: 0; background: radial-gradient(ellipse at center, transparent 45%, rgba(0,0,0,0.78) 100%); }
+
+        /* ===== nav ===== */
+        .nav-bar { position: relative; z-index: 2; border-bottom: 1px solid var(--line); background: rgba(11,10,9,0.9); backdrop-filter: blur(14px); }
+        .nav-inner { max-width: 1100px; margin: 0 auto; padding: 1.1rem 2rem; display: flex; align-items: center; justify-content: space-between; gap: 1rem; }
+        .nav-logo { display: flex; align-items: center; gap: .6rem; text-decoration: none; }
+        .nav-logo-mark { width: 24px; height: 24px; flex: none; display: flex; align-items: center; justify-content: center; background: var(--red); color: var(--bg); font-family: var(--display); font-size: 1rem; border-radius: 2px; box-shadow: 0 0 14px var(--red-glow-strong); }
+        .nav-logo-text { font-family: var(--display); font-size: 1.05rem; letter-spacing: .1em; color: var(--paper); text-transform: uppercase; }
+        .nav-logo-text em { color: var(--red-bright); font-style: normal; }
+        .nav-crumb { font-family: var(--mono); font-size: .58rem; letter-spacing: .18em; text-transform: uppercase; color: var(--ink); }
+        .nav-crumb span { color: var(--red-bright); }
+
+        main { position: relative; z-index: 1; max-width: 1100px; margin: 0 auto; padding: 3.5rem 2rem 6rem; }
+        @media (max-width: 700px) { main { padding: 2.2rem 1.2rem 4rem; } }
+
+        /* ===== auth gate ===== */
+        .gate { display: flex; justify-content: center; padding: 3rem 0; }
+        .gate-card {
+            width: 100%; max-width: 400px; background: var(--bg2); border: 1px solid var(--line); border-top: 2px solid var(--red);
+            padding: 2.4rem 2.2rem; position: relative; overflow: hidden;
+        }
+        .gate-scanlines {
+            position: absolute; inset: 0; pointer-events: none; z-index: 0;
+            background: repeating-linear-gradient(0deg, transparent, transparent 3px, rgba(216,31,47,.02) 3px, rgba(216,31,47,.02) 6px);
+        }
+        .gate-card > * { position: relative; z-index: 1; }
+        .gate-icon { width: 42px; height: 42px; display: flex; align-items: center; justify-content: center; border: 1px solid var(--line-bright); border-radius: 50%; color: var(--red-bright); font-size: 1rem; margin-bottom: 1.2rem; }
+        .gate-label { font-family: var(--mono); font-size: .55rem; letter-spacing: .25em; text-transform: uppercase; color: var(--red-bright); margin-bottom: .5rem; }
+        .gate-title { font-family: var(--display); font-size: 2.2rem; letter-spacing: .02em; text-transform: uppercase; color: var(--paper); line-height: 1; margin-bottom: .6rem; }
+        .gate-sub { font-family: var(--mono); font-size: .62rem; color: var(--ink); letter-spacing: .04em; line-height: 1.6; margin-bottom: 1.6rem; }
+        .gate-form { display: flex; flex-direction: column; gap: 1rem; }
+        .gate-field-label { font-family: var(--mono); font-size: .5rem; letter-spacing: .12em; text-transform: uppercase; color: var(--ink); }
+        .pass-row { display: flex; border: 1px solid var(--line); border-bottom: 1px solid var(--line-bright); }
+        .pass-row input { flex: 1; background: var(--bg); border: none; color: var(--paper); font-family: var(--mono); font-size: .9rem; padding: .65rem .75rem; outline: none; letter-spacing: .05em; }
+        .pass-row:focus-within { border-color: var(--red-bright); }
+        .pass-toggle { background: var(--bg); border: none; border-left: 1px solid var(--line); color: var(--ink); width: 2.6rem; cursor: pointer; transition: color .2s; }
+        .pass-toggle:hover { color: var(--red-bright); }
+        .gate-error { font-family: var(--mono); font-size: .55rem; color: var(--red-bright); letter-spacing: .04em; line-height: 1.6; min-height: 1em; }
+        .gate-submit {
+            background: none; border: 1px solid var(--red-bright); color: var(--red-bright); font-family: var(--mono);
+            font-size: .58rem; letter-spacing: .2em; text-transform: uppercase; padding: .75rem 1rem; cursor: pointer; transition: all .2s;
+        }
+        .gate-submit:hover { background: var(--red-bright); color: var(--bg); box-shadow: 0 0 28px var(--red-glow-strong); }
+        .gate-submit:disabled { opacity: .45; cursor: not-allowed; box-shadow: none; background: none; color: var(--red-bright); }
+        .gate-reset { background: none; border: none; color: var(--ink-dim); font-family: var(--mono); font-size: .52rem; letter-spacing: .04em; text-decoration: underline; cursor: pointer; align-self: center; margin-top: .2rem; }
+        .gate-reset:hover { color: var(--red-bright); }
+        .gate-note {
+            display: flex; gap: .55rem; align-items: flex-start; font-family: var(--mono); font-size: .5rem; color: var(--ink-dim);
+            letter-spacing: .02em; line-height: 1.7; margin-top: 1.8rem; padding-top: 1.4rem; border-top: 1px solid var(--line);
+        }
+        .gate-note i { color: var(--red-bright); margin-top: .15rem; flex: none; }
+
+        /* ===== dashboard ===== */
+        .dash-head { display: flex; align-items: flex-end; justify-content: space-between; gap: 1.5rem; flex-wrap: wrap; margin-bottom: 2.4rem; }
+        .eyebrow { display: flex; align-items: center; gap: 1rem; margin-bottom: 1.1rem; }
+        .eyebrow-mark { font-family: var(--mono); font-size: .6rem; letter-spacing: .14em; color: var(--bg); background: var(--red); padding: .22rem .5rem; border-radius: 2px; }
+        .eyebrow-text { font-family: var(--mono); font-size: .6rem; letter-spacing: .28em; text-transform: uppercase; color: var(--paper); }
+        .eyebrow-line { flex: 1; height: 1px; background: var(--line-bright); }
+        .dash-head h1 { font-family: var(--display); font-size: clamp(2rem, 4.5vw, 2.8rem); letter-spacing: .02em; text-transform: uppercase; color: var(--paper); }
+        .dash-session { display: flex; align-items: center; gap: 1rem; flex-wrap: wrap; }
+        .session-dot { width: 6px; height: 6px; border-radius: 50%; background: var(--green); box-shadow: 0 0 8px var(--green); flex: none; }
+        #session-timer { font-family: var(--mono); font-size: .55rem; color: var(--ink); letter-spacing: .06em; white-space: nowrap; }
+        .dash-btn {
+            font-family: var(--mono); font-size: .55rem; letter-spacing: .1em; text-transform: uppercase; text-decoration: none;
+            color: var(--paper); background: var(--bg3); border: 1px solid var(--line-bright); padding: .5rem .85rem;
+            cursor: pointer; transition: all .2s; display: inline-flex; align-items: center; gap: .4rem; white-space: nowrap;
+        }
+        .dash-btn:hover { border-color: var(--red-bright); color: var(--red-bright); }
+        .dash-btn.ghost { background: none; }
+        .dash-btn.danger { border-color: var(--red-deep); color: var(--red-bright); }
+        .dash-btn.danger:hover { background: var(--red-deep); color: var(--paper); }
+        .dash-btn.small { font-size: .5rem; padding: .4rem .7rem; }
+
+        .stat-row { display: grid; grid-template-columns: repeat(3, 1fr); gap: 1px; background: var(--line); border: 1px solid var(--line); margin-bottom: 2.4rem; }
+        @media (max-width: 640px) { .stat-row { grid-template-columns: 1fr; } }
+        .stat-card { background: var(--bg2); padding: 1.6rem 1.4rem; display: flex; flex-direction: column; gap: .4rem; }
+        .stat-num { font-family: var(--display); font-size: 2.4rem; color: var(--paper); line-height: 1; }
+        .stat-label { font-family: var(--mono); font-size: .52rem; letter-spacing: .1em; text-transform: uppercase; color: var(--ink); }
+
+        .panel { background: var(--bg2); border: 1px solid var(--line); margin-bottom: 1.6rem; }
+        .panel-head { display: flex; align-items: center; gap: .7rem; padding: 1.1rem 1.4rem; border-bottom: 1px solid var(--line); font-family: var(--mono); font-size: .58rem; letter-spacing: .12em; text-transform: uppercase; color: var(--paper); }
+        .panel-head i { color: var(--red-bright); }
+        .panel-head .badge { margin-left: auto; font-size: .5rem; letter-spacing: .08em; color: var(--ink-dim); background: var(--bg); border: 1px solid var(--line-bright); padding: .25rem .55rem; border-radius: 20px; text-transform: none; }
+        .panel-head .dash-btn { margin-left: auto; }
+        .panel-copy { font-family: var(--serif); font-size: .88rem; color: var(--ink); line-height: 1.7; padding: 1.1rem 1.4rem 0; max-width: 68ch; }
+        .panel-copy code { background: var(--bg); border: 1px solid var(--line); padding: .1rem .35rem; border-radius: 2px; color: var(--paper-dim); font-size: .82em; }
+        .endpoint-list { list-style: none; padding: 1rem 1.4rem 1.4rem; display: flex; flex-direction: column; gap: .5rem; }
+        .endpoint-list li { display: flex; align-items: center; gap: .7rem; font-family: var(--mono); font-size: .68rem; color: var(--paper-dim); }
+        .verb { font-size: .52rem; letter-spacing: .06em; padding: .2rem .45rem; border-radius: 2px; flex: none; width: 3.6rem; text-align: center; }
+        .verb.get { background: rgba(62,207,110,.12); color: var(--green); }
+        .verb.post { background: var(--red-glow); color: var(--red-bright); }
+        .verb.del { background: rgba(216,31,47,.12); color: var(--red-deep); }
+
+        .entry-table { display: flex; flex-direction: column; }
+        .entry-row { display: grid; grid-template-columns: 3rem 9rem 1fr auto; gap: 1rem; align-items: center; padding: .9rem 1.4rem; border-bottom: 1px solid var(--line); }
+        .entry-row:last-child { border-bottom: none; }
+        @media (max-width: 720px) { .entry-row { grid-template-columns: 1fr auto; grid-template-areas: "meta meta" "msg msg" "del del"; row-gap: .4rem; } }
+        .entry-row-num { font-family: var(--mono); font-size: .55rem; color: var(--red-bright); }
+        .entry-row-meta { display: flex; flex-direction: column; gap: .15rem; overflow: hidden; }
+        .entry-row-name { font-family: var(--mono); font-size: .58rem; letter-spacing: .06em; text-transform: uppercase; color: var(--paper); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+        .entry-row-time { font-family: var(--mono); font-size: .48rem; color: var(--ink-dim); }
+        .entry-row-msg { font-size: .88rem; font-style: italic; color: var(--ink); line-height: 1.5; overflow-wrap: anywhere; }
+        .entry-row-del { background: none; border: 1px solid var(--line-bright); color: var(--ink); width: 2.1rem; height: 2.1rem; cursor: pointer; transition: all .2s; flex: none; }
+        .entry-row-del:hover { border-color: var(--red-bright); color: var(--red-bright); background: var(--red-glow); }
+        .table-empty { padding: 2.4rem 1.4rem; text-align: center; font-family: var(--mono); font-size: .58rem; color: var(--ink-dim); letter-spacing: .06em; }
+
+        .audit-list { display: flex; flex-direction: column; }
+        .audit-row { display: flex; justify-content: space-between; gap: 1rem; padding: .7rem 1.4rem; border-bottom: 1px solid var(--line); font-family: var(--mono); font-size: .58rem; }
+        .audit-row:last-child { border-bottom: none; }
+        .audit-action { color: var(--paper-dim); }
+        .audit-time { color: var(--ink-dim); white-space: nowrap; }
+
+        /* ===== toast ===== */
+        #toast-stack { position: fixed; bottom: 2rem; left: 50%; transform: translateX(-50%); z-index: 9500; display: flex; flex-direction: column; align-items: center; gap: .5rem; pointer-events: none; }
+        .toast { font-family: var(--mono); font-size: .55rem; letter-spacing: .1em; color: var(--paper); background: rgba(11,10,9,.94); border: 1px solid var(--line-bright); border-left: 2px solid var(--red-bright); padding: .6rem 1rem; opacity: 0; transform: translateY(10px); transition: opacity .3s ease, transform .3s ease; white-space: nowrap; pointer-events: none; backdrop-filter: blur(8px); }
+        .toast.show { opacity: 1; transform: translateY(0); }
+        .toast.error { border-left-color: var(--red-deep); }
+
+        footer { position: relative; z-index: 1; border-top: 1px solid var(--line); }
+        .footer-inner { max-width: 1100px; margin: 0 auto; padding: 1.8rem 2rem; display: flex; align-items: center; justify-content: space-between; gap: 1rem; flex-wrap: wrap; }
+        .back-link { font-family: var(--mono); font-size: .58rem; letter-spacing: .14em; text-transform: uppercase; color: var(--ink); text-decoration: none; transition: color .2s; }
+        .back-link:hover { color: var(--red-bright); }
+        .footer-right { font-family: var(--mono); font-size: .52rem; color: var(--ink-dim); letter-spacing: .08em; }
+    </style>
+</head>
+<body>
+    <div class="vignette"></div>
+
+    <div class="nav-bar">
+        <div class="nav-inner">
+            <a href="index.html" class="nav-logo">
+                <span class="nav-logo-mark">R</span>
+                <span class="nav-logo-text">Ritu<em>al</em></span>
+            </a>
+            <span class="nav-crumb">Restricted <span>/</span> Admin</span>
+        </div>
+    </div>
+
+    <main>
+        <!-- ===== auth gate ===== -->
+        <section class="gate" id="auth-gate">
+            <div class="gate-card">
+                <div class="gate-scanlines"></div>
+                <div class="gate-icon"><i class="fas fa-lock"></i></div>
+                <div class="gate-label" id="gate-label">Restricted access</div>
+                <h1 class="gate-title" id="gate-title">Admin</h1>
+                <p class="gate-sub" id="gate-sub">Checking this device…</p>
+
+                <form class="gate-form" id="setup-form" hidden novalidate>
+                    <div>
+                        <label class="gate-field-label" for="setup-pass">New password — min. 8 characters</label>
+                        <div class="pass-row" style="margin-top:.4rem;">
+                            <input type="password" id="setup-pass" autocomplete="new-password" minlength="8" required />
+                            <button type="button" class="pass-toggle" data-target="setup-pass" aria-label="Show password"><i class="fas fa-eye"></i></button>
+                        </div>
+                    </div>
+                    <div>
+                        <label class="gate-field-label" for="setup-pass-confirm">Confirm password</label>
+                        <div class="pass-row" style="margin-top:.4rem;">
+                            <input type="password" id="setup-pass-confirm" autocomplete="new-password" minlength="8" required />
+                            <button type="button" class="pass-toggle" data-target="setup-pass-confirm" aria-label="Show password"><i class="fas fa-eye"></i></button>
+                        </div>
+                    </div>
+                    <div class="gate-error" id="setup-error"></div>
+                    <button type="submit" class="gate-submit">Create access →</button>
+                </form>
+
+                <form class="gate-form" id="login-form" hidden novalidate>
+                    <div>
+                        <label class="gate-field-label" for="login-pass">Password</label>
+                        <div class="pass-row" style="margin-top:.4rem;">
+                            <input type="password" id="login-pass" autocomplete="current-password" required />
+                            <button type="button" class="pass-toggle" data-target="login-pass" aria-label="Show password"><i class="fas fa-eye"></i></button>
+                        </div>
+                    </div>
+                    <div class="gate-error" id="login-error"></div>
+                    <button type="submit" class="gate-submit" id="login-submit">Unlock →</button>
+                    <button type="button" class="gate-reset" id="reset-link">Forgot it? Reset this device's admin access</button>
+                </form>
+
+                <p class="gate-note"><i class="fas fa-triangle-exclamation"></i> <span>This is a device-only lock, not real security — it keeps casual visitors out, but anyone with browser dev tools can read or bypass it. Read the note at the top of <code>admin.js</code> before this handles anything that actually matters.</span></p>
+            </div>
+        </section>
+
+        <!-- ===== dashboard ===== -->
+        <section class="dash" id="dashboard" hidden>
+            <div class="dash-head">
+                <div>
+                    <div class="eyebrow"><span class="eyebrow-mark">Admin</span><span class="eyebrow-text">Guestbook moderation</span><span class="eyebrow-line"></span></div>
+                    <h1>Control room.</h1>
+                </div>
+                <div class="dash-session">
+                    <span class="session-dot"></span>
+                    <span id="session-timer">session —</span>
+                    <a href="guestbook.html" target="_blank" rel="noopener" class="dash-btn ghost">View live guestbook <i class="fas fa-arrow-up-right-from-square"></i></a>
+                    <button class="dash-btn" id="logout-btn">Log out</button>
+                </div>
+            </div>
+
+            <div class="stat-row">
+                <div class="stat-card"><span class="stat-num" id="stat-total">0</span><span class="stat-label">Total entries</span></div>
+                <div class="stat-card"><span class="stat-num" id="stat-today">0</span><span class="stat-label">Signed today</span></div>
+                <div class="stat-card"><span class="stat-num" id="stat-storage">0 KB</span><span class="stat-label">Storage used</span></div>
+            </div>
+
+            <div class="panel backend-panel">
+                <div class="panel-head"><i class="fas fa-server"></i><span>Backend status</span><span class="badge" id="backend-badge">Not connected</span></div>
+                <p class="panel-copy">Entries are currently read and written through <code>guestbook-store.js</code>, backed by this browser's local storage — there's no server yet, so nothing here is shared across devices. Every method in that file is already written the way a real API call would look, so connecting a backend later means editing that one file, not this dashboard.</p>
+                <ul class="endpoint-list">
+                    <li><span class="verb get">GET</span><code>/api/guestbook</code></li>
+                    <li><span class="verb post">POST</span><code>/api/guestbook</code></li>
+                    <li><span class="verb del">DELETE</span><code>/api/guestbook/:id</code></li>
+                    <li><span class="verb del">DELETE</span><code>/api/guestbook</code></li>
+                </ul>
+            </div>
+
+            <div class="panel">
+                <div class="panel-head"><i class="fas fa-book"></i><span>Guestbook entries</span><button class="dash-btn danger small" id="clear-all-btn">Clear all</button></div>
+                <div class="entry-table" id="entry-table"></div>
+            </div>
+
+            <div class="panel">
+                <div class="panel-head"><i class="fas fa-clock-rotate-left"></i><span>Activity log</span></div>
+                <div class="audit-list" id="audit-list"></div>
+            </div>
+        </section>
+    </main>
+
+    <footer>
+        <div class="footer-inner">
+            <a href="index.html" class="back-link">← Back to Ritual</a>
+            <span class="footer-right">© 2026 — made with care</span>
+        </div>
+    </footer>
+
+    <div id="toast-stack" role="status" aria-live="polite"></div>
+</body>
+</html>

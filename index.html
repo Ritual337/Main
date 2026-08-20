@@ -4,9 +4,38 @@
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Ritual — a personal archive</title>
+
+    <meta name="description" content="Ritual — a personal archive of photography, design notes, and late-night writing. No feed, no followers, no algorithm." />
+    <meta name="author" content="Ritual" />
+    <meta name="robots" content="index, follow" />
+    <meta name="theme-color" content="#0b0a09" />
+    <meta name="color-scheme" content="dark" />
+
+    <meta property="og:type" content="website" />
+    <meta property="og:title" content="Ritual — a personal archive" />
+    <meta property="og:description" content="No feed. No followers. No algorithm. Just things logged, kept, and occasionally shared." />
+    <meta property="og:image" content="https://picsum.photos/seed/ritual-portrait/1200/630" />
+    <meta name="twitter:card" content="summary_large_image" />
+    <meta name="twitter:title" content="Ritual — a personal archive" />
+    <meta name="twitter:description" content="No feed. No followers. No algorithm. Just things logged, kept, and occasionally shared." />
+
+    <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><rect width=%22100%22 height=%22100%22 rx=%2218%22 fill=%22%230b0a09%22/><text x=%2250%22 y=%2270%22 font-family=%22Georgia, serif%22 font-size=%2262%22 fill=%22%23d81f2f%22 text-anchor=%22middle%22>R</text></svg>" />
+
+    <!-- Performance: warm up connections to third-party origins before we need them -->
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link rel="preconnect" href="https://cdnjs.cloudflare.com" />
+
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css" />
     <link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=IBM+Plex+Mono:ital,wght@0,400;0,500;0,600;0,700;1,400&family=Source+Serif+4:ital,wght@0,400;0,500;0,600;0,700;1,400;1,500;1,600&display=swap" rel="stylesheet" />
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+
+    <!-- Performance: logic lives in external, cacheable, non-render-blocking files.
+         Both are deferred (parsed off the main thread, executed in document order
+         once parsing finishes), and three-loader.js skips downloading the ~600KB
+         three.js library entirely for visitors who prefer reduced motion. -->
+    <script src="three-loader.js" defer></script>
+    <script src="script.js" defer></script>
+
     <style>
         :root {
             --bg: #0b0a09;
@@ -325,6 +354,9 @@
             opacity: 0; transition: opacity .3s, color .3s;
         }
         .log-card:hover .log-icon { opacity: 1; color: var(--red-bright); }
+        .log-card.log-card-placeholder { background: var(--bg); }
+        .log-card.log-card-placeholder .log-time { color: var(--ink-dim); }
+        .log-card.log-card-placeholder .log-icon { color: var(--ink-dim); opacity: .55; }
         @media (max-width: 860px) {
             .log-grid { grid-template-columns: 1fr 1fr; }
             .log-card.featured { grid-column: span 2; }
@@ -459,6 +491,7 @@
         .index-cell {
             background: var(--bg); padding: 2.4rem 1.7rem; display: flex; flex-direction: column; gap: .7rem;
             cursor: pointer; transition: background .35s, transform .3s ease; position: relative; min-height: 190px;
+            width: 100%; text-align: left; font-family: inherit; color: inherit; border: none;
         }
         .index-cell:hover { background: var(--bg2); transform: translateY(-4px); z-index: 1; }
         .index-cell.featured { border-top: 2px solid var(--red); }
@@ -555,16 +588,16 @@
         }
 
         /* ===== overlays shared ===== */
-        .poem-overlay, .glitch-overlay, .card-overlay, .guestbook-overlay {
+        .poem-overlay, .glitch-overlay, .card-overlay {
             position: fixed; inset: 0; z-index: 8200; display: flex; align-items: center; justify-content: center;
             background: rgba(6,5,5,.96); backdrop-filter: blur(14px); opacity: 0; pointer-events: none; transition: opacity .35s ease;
         }
-        .poem-overlay.active, .glitch-overlay.active, .card-overlay.active, .guestbook-overlay.active { opacity: 1; pointer-events: all; }
-        .poem-card, .glitch-card, .guestbook-card {
+        .poem-overlay.active, .glitch-overlay.active, .card-overlay.active { opacity: 1; pointer-events: all; }
+        .poem-card, .glitch-card {
             background: var(--bg2); border: 1px solid var(--line); padding: 2.6rem 2.8rem; max-width: 500px; width: 90%;
             position: relative; box-shadow: 0 0 80px rgba(0,0,0,.9); transform: translateY(10px); transition: transform .35s ease;
         }
-        .poem-overlay.active .poem-card, .glitch-overlay.active .glitch-card, .guestbook-overlay.active .guestbook-card { transform: translateY(0); }
+        .poem-overlay.active .poem-card, .glitch-overlay.active .glitch-card { transform: translateY(0); }
         .overlay-close {
             position: absolute; top: .8rem; right: 1rem; background: none; border: none; color: var(--ink);
             font-size: 1rem; cursor: pointer; transition: color .2s; z-index: 5;
@@ -607,7 +640,7 @@
         @media (max-width: 860px) {
             .glitch-card { padding: 2rem 1.2rem; }
             .glitch-ritual { font-size: clamp(2.5rem, 16vw, 4.5rem); }
-            .poem-card, .guestbook-card { padding: 2rem 1.4rem; max-width: 95%; }
+            .poem-card { padding: 2rem 1.4rem; max-width: 95%; }
         }
 
         /* ===== card flip (id badge) ===== */
@@ -640,30 +673,6 @@
             .card-front-text { font-size: 2.6rem; }
             .card-back-name { font-size: 1.15rem; }
         }
-
-        /* ===== guestbook (ledger) ===== */
-        .guestbook-note { font-family: var(--mono); font-size: .55rem; color: var(--ink); letter-spacing: .03em; line-height: 1.7; margin-bottom: 1.1rem; }
-        .guestbook-form { display: flex; flex-direction: column; gap: .55rem; }
-        .guestbook-form input, .guestbook-form textarea {
-            background: var(--bg); border: 1px solid var(--line); border-bottom: 1px solid var(--line-bright);
-            color: var(--paper); font-family: var(--serif); font-size: .9rem; padding: .55rem .7rem; resize: none;
-            outline: none; transition: border-color .2s;
-        }
-        .guestbook-form input:focus, .guestbook-form textarea:focus { border-color: var(--red-bright); }
-        .guestbook-form textarea { min-height: 65px; font-style: italic; }
-        .guestbook-submit {
-            align-self: flex-end; background: none; border: 1px solid var(--red-bright); color: var(--red-bright);
-            font-family: var(--mono); font-size: .5rem; letter-spacing: .2em; text-transform: uppercase;
-            padding: .5rem 1.1rem; cursor: pointer; transition: all .2s;
-        }
-        .guestbook-submit:hover { background: var(--red-bright); color: var(--bg); box-shadow: 0 0 28px var(--red-glow-strong); }
-        .guestbook-list { display: flex; flex-direction: column; gap: .8rem; overflow-y: auto; padding-right: .3rem; border-top: 1px solid var(--line); padding-top: 1rem; max-height: 180px; margin-top: .6rem; }
-        .guestbook-empty { font-family: var(--mono); font-size: .5rem; color: var(--ink-dim); letter-spacing: .1em; text-align: center; padding: .4rem 0; }
-        .guestbook-entry { display: flex; gap: .6rem; align-items: baseline; }
-        .guestbook-entry-num { font-family: var(--mono); font-size: .48rem; color: var(--red-bright); flex: none; }
-        .guestbook-entry-body { display: flex; flex-direction: column; gap: .1rem; }
-        .guestbook-entry-name { font-family: var(--mono); font-size: .48rem; color: var(--paper); letter-spacing: .14em; text-transform: uppercase; }
-        .guestbook-entry-msg { font-size: .85rem; font-style: italic; color: var(--ink); line-height: 1.5; }
 
         /* ===== music player ===== */
         .music-player-overlay {
@@ -741,11 +750,11 @@
             </a>
             <ul class="nav-links">
                 <li><a href="#dossier">Dossier</a></li>
-                <li><a href="#log">Log</a></li>
+                <li><a href="#log">Index</a></li>
                 <li><a href="#frames">Frames</a></li>
                 <li><a href="#signal">Signal</a></li>
                 <li><a href="#notes">Notes</a></li>
-                <li><a href="#index">Index</a></li>
+                <li><a href="#index">Archives</a></li>
             </ul>
             <div class="nav-status">
                 <span class="status-dot"></span>
@@ -760,11 +769,11 @@
     <div class="mobile-menu" id="mobile-menu">
         <button class="mobile-menu-close" id="mobile-menu-close" aria-label="Close menu"><i class="fas fa-times"></i></button>
         <a href="#dossier"><span>01</span>Dossier</a>
-        <a href="#log"><span>02</span>Log</a>
+        <a href="#log"><span>02</span>Index</a>
         <a href="#frames"><span>03</span>Frames</a>
         <a href="#signal"><span>04</span>Signal</a>
         <a href="#notes"><span>05</span>Notes</a>
-        <a href="#index"><span>06</span>Index</a>
+        <a href="#index"><span>06</span>Archives</a>
     </div>
 
     <main>
@@ -800,8 +809,8 @@
         </section>
 
         <section id="log" class="section reveal">
-            <div class="eyebrow"><span class="eyebrow-num">02</span><span class="eyebrow-text">Daily Log</span><span class="eyebrow-line"></span></div>
-            <p class="section-note">Eight small checkpoints that hold the day together.</p>
+            <div class="eyebrow"><span class="eyebrow-num">02</span><span class="eyebrow-text">Index</span><span class="eyebrow-line"></span></div>
+            <p class="section-note">Eight checkpoints that hold the day together — plus a few open slots for what's next.</p>
             <div class="log-grid">
                 <button class="log-card featured" type="button">
                     <span class="log-time">05:30</span>
@@ -850,6 +859,24 @@
                     <span class="log-name">The Last Note</span>
                     <span class="log-desc">One final thought written down. The phone goes face-down. The room goes dark.</span>
                     <span class="log-icon">✧</span>
+                </button>
+                <button class="log-card log-card-placeholder" type="button" data-placeholder-msg="This slot isn't written yet — check back soon.">
+                    <span class="log-time">INDEX</span>
+                    <span class="log-name">Button 1</span>
+                    <span class="log-desc">Reserved for what's next. Never quite finished — on purpose.</span>
+                    <span class="log-icon">✚</span>
+                </button>
+                <button class="log-card log-card-placeholder" type="button" data-placeholder-msg="Still empty. Something will live here eventually.">
+                    <span class="log-time">INDEX</span>
+                    <span class="log-name">Button 2</span>
+                    <span class="log-desc">An open slot in the index. Nothing to see yet — that's fine.</span>
+                    <span class="log-icon">✚</span>
+                </button>
+                <button class="log-card log-card-placeholder" type="button" data-placeholder-msg="Last slot, also empty. The grid just likes being whole.">
+                    <span class="log-time">INDEX</span>
+                    <span class="log-name">Button 3</span>
+                    <span class="log-desc">Held open so the grid stays whole. More entries, eventually.</span>
+                    <span class="log-icon">✚</span>
                 </button>
             </div>
         </section>
@@ -957,44 +984,44 @@
         </section>
 
         <section id="index" class="reveal">
-            <div class="eyebrow"><span class="eyebrow-num">06</span><span class="eyebrow-text">Index</span><span class="eyebrow-line"></span></div>
+            <div class="eyebrow"><span class="eyebrow-num">06</span><span class="eyebrow-text">Archives</span><span class="eyebrow-line"></span></div>
             <div class="index-grid">
-                <div class="index-cell" id="photography-interest">
-                    <div class="index-num">01</div>
-                    <div class="index-name">Photography</div>
-                    <div class="index-desc">Film mostly. 35mm. The grain matters more than the pixels.</div>
-                    <div class="index-arrow">→</div>
-                </div>
-                <div class="index-cell featured" id="design-interest">
-                    <div class="index-num">02</div>
-                    <div class="index-name">Design</div>
-                    <div class="index-desc">Visual systems, type, and things that feel right without explanation.</div>
-                    <div class="index-arrow">→</div>
-                </div>
-                <div class="index-cell featured" id="music-interest">
-                    <div class="index-num">03</div>
-                    <div class="index-name">Music</div>
-                    <div class="index-desc">Whatever sounds good at 2am. Player included.</div>
-                    <div class="index-arrow">→</div>
-                </div>
-                <div class="index-cell" id="card-interest">
-                    <div class="index-num">04</div>
-                    <div class="index-name">Card</div>
-                    <div class="index-desc">Digital business card — hover or tap to flip. Old-school charm.</div>
-                    <div class="index-arrow">→</div>
-                </div>
-                <div class="index-cell" id="writing-interest">
-                    <div class="index-num">05</div>
-                    <div class="index-name">Writing</div>
-                    <div class="index-desc">Observations. Fragments. Nothing finished, everything true.</div>
-                    <div class="index-arrow">→</div>
-                </div>
-                <div class="index-cell featured" id="guestbook-interest">
-                    <div class="index-num">06</div>
-                    <div class="index-name">Guestbook</div>
-                    <div class="index-desc">Leave a note. It won't be saved — that's the point.</div>
-                    <div class="index-arrow">→</div>
-                </div>
+                <button class="index-cell" type="button" id="photography-interest">
+                    <span class="index-num">01</span>
+                    <span class="index-name">Photography</span>
+                    <span class="index-desc">Film mostly. 35mm. The grain matters more than the pixels.</span>
+                    <span class="index-arrow">→</span>
+                </button>
+                <button class="index-cell featured" type="button" id="design-interest">
+                    <span class="index-num">02</span>
+                    <span class="index-name">Design</span>
+                    <span class="index-desc">Visual systems, type, and things that feel right without explanation.</span>
+                    <span class="index-arrow">→</span>
+                </button>
+                <button class="index-cell featured" type="button" id="music-interest">
+                    <span class="index-num">03</span>
+                    <span class="index-name">Music</span>
+                    <span class="index-desc">Whatever sounds good at 2am. Player included.</span>
+                    <span class="index-arrow">→</span>
+                </button>
+                <button class="index-cell" type="button" id="card-interest">
+                    <span class="index-num">04</span>
+                    <span class="index-name">Card</span>
+                    <span class="index-desc">Digital business card — hover or tap to flip. Old-school charm.</span>
+                    <span class="index-arrow">→</span>
+                </button>
+                <button class="index-cell" type="button" id="writing-interest">
+                    <span class="index-num">05</span>
+                    <span class="index-name">Writing</span>
+                    <span class="index-desc">Observations. Fragments. Nothing finished, everything true.</span>
+                    <span class="index-arrow">→</span>
+                </button>
+                <button class="index-cell featured" type="button" id="guestbook-interest">
+                    <span class="index-num">06</span>
+                    <span class="index-name">Guestbook</span>
+                    <span class="index-desc">Leave a note. Read what everyone else left too.</span>
+                    <span class="index-arrow">→</span>
+                </button>
             </div>
         </section>
     </main>
@@ -1008,7 +1035,7 @@
                     <li><a href="#">Twitter</a></li>
                     <li><a href="mailto:ritual@creates.space">Email</a></li>
                     <li><a href="#">Behance</a></li>
-                    <li><a href="#" id="footer-guestbook-link">Guestbook</a></li>
+                    <li><a href="guestbook.html" id="footer-guestbook-link">Guestbook</a></li>
                 </ul>
             </div>
             <div class="footer-right" id="footer-right">© 2026 — made with care</div>
@@ -1092,22 +1119,6 @@ Our roots entwined with hers, unyielding, condemned.</div>
         </div>
     </div>
 
-    <div class="guestbook-overlay" id="guestbook-overlay">
-        <div class="guestbook-card">
-            <button class="overlay-close" id="guestbook-close-btn" aria-label="Close guestbook"><i class="fas fa-times"></i></button>
-            <div class="poem-label" style="margin-bottom:.9rem;">Guestbook — Sign-in Log</div>
-            <p class="guestbook-note">Say hi, leave a thought. Nothing is stored — it lives as long as this tab does, then it's gone. Sign anyway.</p>
-            <form class="guestbook-form" id="guestbook-form">
-                <input type="text" id="guestbook-name" placeholder="your name (or make one up)" maxlength="30" required aria-label="Your name" />
-                <textarea id="guestbook-message" placeholder="say something..." maxlength="240" required aria-label="Your message"></textarea>
-                <button type="submit" class="guestbook-submit">Sign it</button>
-            </form>
-            <div class="guestbook-list" id="guestbook-list">
-                <div class="guestbook-empty" id="guestbook-empty">no one's signed yet. be the first.</div>
-            </div>
-        </div>
-    </div>
-
     <div class="music-player-overlay" id="music-player">
         <div class="player-header" id="player-drag-handle">
             <span class="player-eq" id="player-eq"><span></span><span></span><span></span></span>
@@ -1136,679 +1147,5 @@ Our roots entwined with hers, unyielding, condemned.</div>
     <div id="toast-stack" role="status" aria-live="polite"></div>
     <button id="back-to-top" aria-label="Back to top"><i class="fas fa-chevron-up"></i></button>
 
-<script>
-    (function bgScene() {
-        const canvas = document.getElementById('three-canvas');
-        if (!canvas || window.matchMedia('(prefers-reduced-motion: reduce)').matches) {
-            if (canvas) canvas.style.display = 'none';
-            return;
-        }
-        const renderer = new THREE.WebGLRenderer({ canvas, alpha: true, antialias: true });
-        renderer.setPixelRatio(Math.min(window.devicePixelRatio, 1.5));
-        renderer.setSize(window.innerWidth, window.innerHeight);
-        const scene = new THREE.Scene();
-        const camera = new THREE.PerspectiveCamera(55, window.innerWidth / window.innerHeight, 0.5, 60);
-        camera.position.z = 14;
-
-        const COUNT = 130;
-        const positions = new Float32Array(COUNT * 3);
-        const colorsArr = new Float32Array(COUNT * 3);
-        const redColor = new THREE.Color(0xd81f2f);
-        const boneColor = new THREE.Color(0x6b6459);
-        const pts = [];
-        for (let i = 0; i < COUNT; i++) {
-            const x = (Math.random() - 0.5) * 26;
-            const y = (Math.random() - 0.5) * 18;
-            const z = (Math.random() - 0.5) * 14 - 4;
-            positions[i * 3] = x; positions[i * 3 + 1] = y; positions[i * 3 + 2] = z;
-            pts.push(new THREE.Vector3(x, y, z));
-            const c = Math.random() < 0.2 ? redColor : boneColor;
-            colorsArr[i * 3] = c.r; colorsArr[i * 3 + 1] = c.g; colorsArr[i * 3 + 2] = c.b;
-        }
-        const ptGeo = new THREE.BufferGeometry();
-        ptGeo.setAttribute('position', new THREE.BufferAttribute(positions, 3));
-        ptGeo.setAttribute('color', new THREE.BufferAttribute(colorsArr, 3));
-        const ptMat = new THREE.PointsMaterial({ size: 0.1, vertexColors: true, transparent: true, opacity: 0.85 });
-        const points = new THREE.Points(ptGeo, ptMat);
-
-        const lineVerts = [];
-        const maxDist = 4.2;
-        for (let i = 0; i < pts.length; i++) {
-            for (let j = i + 1; j < pts.length; j++) {
-                if (pts[i].distanceTo(pts[j]) < maxDist && Math.random() < 0.055) {
-                    lineVerts.push(pts[i].x, pts[i].y, pts[i].z, pts[j].x, pts[j].y, pts[j].z);
-                }
-            }
-        }
-        const lineGeo = new THREE.BufferGeometry();
-        lineGeo.setAttribute('position', new THREE.BufferAttribute(new Float32Array(lineVerts), 3));
-        const lineMat = new THREE.LineBasicMaterial({ color: 0x6e0f17, transparent: true, opacity: 0.4 });
-        const lines = new THREE.LineSegments(lineGeo, lineMat);
-
-        const group = new THREE.Group();
-        group.add(points);
-        group.add(lines);
-        scene.add(group);
-
-        let mx = 0, my = 0, t = 0;
-        document.addEventListener('mousemove', (e) => {
-            mx = (e.clientX / window.innerWidth - 0.5) * 2;
-            my = (e.clientY / window.innerHeight - 0.5) * 2;
-        });
-
-        function animate() {
-            requestAnimationFrame(animate);
-            t += 0.0022;
-            group.rotation.y = t;
-            group.rotation.x = Math.sin(t * 0.4) * 0.08;
-            camera.position.x += (mx * 1.1 - camera.position.x) * 0.02;
-            camera.position.y += (-my * 0.7 - camera.position.y) * 0.02;
-            camera.lookAt(0, 0, -2);
-            renderer.render(scene, camera);
-        }
-        animate();
-        window.addEventListener('resize', () => {
-            renderer.setSize(window.innerWidth, window.innerHeight);
-            camera.aspect = window.innerWidth / window.innerHeight;
-            camera.updateProjectionMatrix();
-        });
-        if (window.innerWidth < 860) { ptMat.opacity *= 0.6; lineMat.opacity *= 0.6; }
-    })();
-
-    (function cursorGlow() {
-        const glow = document.getElementById('cursor-glow');
-        if (!glow) return;
-        document.addEventListener('mousemove', (e) => {
-            glow.style.left = e.clientX + 'px';
-            glow.style.top = e.clientY + 'px';
-        });
-        const hoverEls = document.querySelectorAll(
-            'a, button, .clickable-img, .index-cell, .notes-tab, .frame-item, .log-card, .read-more-btn, .guestbook-submit, .copyable, .whisper-dot, .card-scene'
-        );
-        hoverEls.forEach(el => {
-            el.addEventListener('mouseenter', () => glow.classList.add('hover'));
-            el.addEventListener('mouseleave', () => glow.classList.remove('hover'));
-        });
-    })();
-
-    (function scrollProgress() {
-        const bar = document.getElementById('scroll-progress');
-        window.addEventListener('scroll', () => {
-            const p = document.documentElement.scrollHeight - window.innerHeight;
-            bar.style.width = p > 0 ? (window.scrollY / p) * 100 + '%' : '0%';
-        });
-    })();
-
-    (function backToTop() {
-        const btn = document.getElementById('back-to-top');
-        window.addEventListener('scroll', () => { btn.classList.toggle('visible', window.scrollY > 500); });
-        btn.addEventListener('click', () => window.scrollTo({ top: 0, behavior: 'smooth' }));
-    })();
-
-    (function navScroll() {
-        const nav = document.getElementById('nav-bar');
-        window.addEventListener('scroll', () => { nav.classList.toggle('scrolled', window.scrollY > 60); });
-    })();
-
-    (function navClock() {
-        const el = document.getElementById('nav-clock');
-        if (!el) return;
-        function tick() { el.textContent = new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', second: '2-digit' }); }
-        tick();
-        setInterval(tick, 1000);
-    })();
-
-    (function heroScrollHint() {
-        const btn = document.getElementById('hero-scroll-hint');
-        if (!btn) return;
-        btn.addEventListener('click', () => {
-            const target = document.getElementById('dossier');
-            if (target) target.scrollIntoView({ behavior: 'smooth' });
-        });
-    })();
-
-    (function mobileMenu() {
-        const toggle = document.getElementById('mobile-nav-toggle');
-        const menu = document.getElementById('mobile-menu');
-        const closeBtn = document.getElementById('mobile-menu-close');
-        const links = menu.querySelectorAll('a');
-        toggle.addEventListener('click', () => menu.classList.add('active'));
-        closeBtn.addEventListener('click', () => menu.classList.remove('active'));
-        links.forEach(l => l.addEventListener('click', () => menu.classList.remove('active')));
-        menu.addEventListener('click', (e) => { if (e.target === menu) menu.classList.remove('active'); });
-    })();
-
-    (function rippleFx() {
-        const container = document.getElementById('ripple-container');
-        if (!container) return;
-        document.addEventListener('click', (e) => {
-            const r = document.createElement('div');
-            r.className = 'ripple';
-            const s = 35 + Math.random() * 55;
-            r.style.width = s + 'px';
-            r.style.height = s + 'px';
-            r.style.left = (e.clientX - s / 2) + 'px';
-            r.style.top = (e.clientY - s / 2) + 'px';
-            container.appendChild(r);
-            setTimeout(() => r.remove(), 900);
-        });
-    })();
-
-    (function toastSystem() {
-        const stack = document.getElementById('toast-stack');
-        window.showToast = function (msg, dur = 2600) {
-            const el = document.createElement('div');
-            el.className = 'toast';
-            el.textContent = msg;
-            stack.appendChild(el);
-            requestAnimationFrame(() => el.classList.add('show'));
-            setTimeout(() => { el.classList.remove('show'); setTimeout(() => el.remove(), 350); }, dur);
-        };
-    })();
-
-    (function lightboxFx() {
-        const items = Array.from(document.querySelectorAll('.clickable-img'));
-        const lb = document.getElementById('lightbox');
-        const img = document.getElementById('lightbox-img');
-        const cap = document.getElementById('lightbox-caption');
-        const close = document.getElementById('lightbox-close');
-        const backdrop = document.getElementById('lightbox-backdrop');
-        const prev = document.getElementById('lightbox-prev');
-        const next = document.getElementById('lightbox-next');
-        let cur = 0;
-
-        function open(i) {
-            cur = i;
-            const el = items[i];
-            img.src = el.dataset.src;
-            cap.textContent = el.dataset.caption || '';
-            lb.classList.add('active');
-            document.body.classList.add('overlay-open');
-            img.style.opacity = '0';
-            img.onload = () => { img.style.opacity = '1'; };
-            setTimeout(() => { img.style.opacity = '1'; }, 200);
-        }
-        function closeLb() {
-            lb.classList.remove('active');
-            document.body.classList.remove('overlay-open');
-            setTimeout(() => { img.src = ''; }, 350);
-        }
-        items.forEach((el, i) => el.addEventListener('click', (e) => {
-            if (e.target.closest('.mark-burst-layer') && e.detail === 2) return;
-            open(i);
-        }));
-        close.addEventListener('click', closeLb);
-        backdrop.addEventListener('click', closeLb);
-        prev.addEventListener('click', () => open((cur - 1 + items.length) % items.length));
-        next.addEventListener('click', () => open((cur + 1) % items.length));
-        document.addEventListener('keydown', (e) => {
-            if (!lb.classList.contains('active')) return;
-            if (e.key === 'Escape') closeLb();
-            if (e.key === 'ArrowLeft') open((cur - 1 + items.length) % items.length);
-            if (e.key === 'ArrowRight') open((cur + 1) % items.length);
-        });
-    })();
-
-    (function sparkBurst() {
-        document.querySelectorAll('.frame-item, .clickable-img').forEach(el => {
-            let burstLayer = el.querySelector('.mark-burst-layer');
-            if (!burstLayer) {
-                burstLayer = document.createElement('div');
-                burstLayer.className = 'mark-burst-layer';
-                el.appendChild(burstLayer);
-            }
-            function pop(x, y, count) {
-                for (let i = 0; i < count; i++) {
-                    const mark = document.createElement('span');
-                    mark.className = 'mark-pop';
-                    mark.innerHTML = '✦';
-                    mark.style.left = (x + (Math.random() * 35 - 17)) + 'px';
-                    mark.style.top = (y + (Math.random() * 12 - 6)) + 'px';
-                    mark.style.animationDelay = (i * 0.04) + 's';
-                    mark.style.fontSize = (1 + Math.random() * 0.6) + 'rem';
-                    burstLayer.appendChild(mark);
-                    setTimeout(() => mark.remove(), 1100);
-                }
-            }
-            el.addEventListener('dblclick', (e) => {
-                e.stopPropagation();
-                const rect = el.getBoundingClientRect();
-                pop(e.clientX - rect.left, e.clientY - rect.top, 6);
-            });
-            let lastTap = 0;
-            el.addEventListener('touchstart', (e) => {
-                const now = Date.now();
-                if (now - lastTap < 400) {
-                    e.preventDefault();
-                    const touch = e.touches[0];
-                    const rect = el.getBoundingClientRect();
-                    pop(touch.clientX - rect.left, touch.clientY - rect.top, 5);
-                }
-                lastTap = now;
-            });
-        });
-    })();
-
-    (function heroTypewriter() {
-        const el = document.getElementById('hero-subtitle');
-        if (!el) return;
-        const full = "a personal archive with no feed and no followers.\njust things logged, kept, and occasionally shared.";
-        let idx = 0;
-        let html = '';
-        if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) {
-            el.innerHTML = full.replace(/\n/g, '<br>');
-            return;
-        }
-        function type() {
-            if (idx < full.length) {
-                const ch = full[idx];
-                html += ch === '\n' ? '<br>' : ch;
-                idx++;
-                el.innerHTML = html + ' <span class="cursor-blink"></span>';
-                setTimeout(type, 22);
-            } else {
-                const cursor = el.querySelector('.cursor-blink');
-                if (cursor) cursor.classList.add('hidden');
-            }
-        }
-        setTimeout(type, 900);
-    })();
-
-    (function revealOnScroll() {
-        const els = document.querySelectorAll('.reveal');
-        if ('IntersectionObserver' in window) {
-            const obs = new IntersectionObserver((entries) => {
-                entries.forEach(e => { if (e.isIntersecting) { e.target.classList.add('in-view'); obs.unobserve(e.target); } });
-            }, { threshold: 0.12, rootMargin: '0px 0px -40px 0px' });
-            els.forEach(el => obs.observe(el));
-        } else {
-            els.forEach(el => el.classList.add('in-view'));
-        }
-    })();
-
-    (function signalTicker() {
-        const quotes = [
-            'the night remembers what the day forgets',
-            'every ritual begins with a single breath',
-            'in the space between words, meaning lingers',
-            'what we build in the dark stands in the light',
-            'silence is not empty — it is full of answers',
-        ];
-        const textEl = document.getElementById('whisper-text');
-        const dots = document.querySelectorAll('.whisper-dot');
-        let current = 0;
-        let interval;
-        function show(i) {
-            current = i;
-            textEl.classList.add('fading');
-            setTimeout(() => {
-                textEl.textContent = quotes[i];
-                textEl.classList.remove('fading');
-                dots.forEach((d, j) => d.classList.toggle('active', j === i));
-            }, 400);
-        }
-        dots.forEach(d => d.addEventListener('click', () => {
-            clearInterval(interval);
-            show(parseInt(d.dataset.index));
-            interval = setInterval(next, 5000);
-        }));
-        function next() { show((current + 1) % quotes.length); }
-        interval = setInterval(next, 5000);
-    })();
-
-    (function notesSection() {
-        const data = [
-            { tag: 'Latest — June 2026', title: 'On why I started this site',
-                body: 'I wanted a place that was just mine. Not a feed, not a profile, not a portfolio. Something closer to a room — where things accumulate slowly and nothing needs to perform. The internet used to feel more like that, and I miss it.\n\nNobody asked for this. That\'s kind of the point. A photo that isn\'t good enough for a "grid." A thought too short for an essay and too long for a caption. This is the drawer for that stuff.\n\nIf you\'re reading this, hi. You found the drawer.' },
-            { tag: 'May 2026', title: 'Analog vs. digital — a false war',
-                body: 'People ask which one I "really" believe in, like it\'s a religion. It isn\'t. Film makes me slow down and decide before I press the shutter. Digital lets me take the photo I would\'ve missed while deciding.\n\nMost of my favorite shots — on either format — were the ones I almost didn\'t take. So no, I\'m not "team film." I\'m team pay attention.' },
-            { tag: 'April 2026', title: 'Things I noticed this month',
-                body: 'The sound a shutter makes in an empty stairwell. How every city looks the same at 4am and completely different at 8am. That I still haven\'t finished a roll I started in February. That "just five more minutes" of editing is never five minutes.\n\nNone of this adds up to anything. I just wanted to write it down before I forgot.' },
-            { tag: 'March 2026', title: 'Why I always shoot at night',
-                body: 'Daylight shows you everything at once. Night makes you choose — a streetlight, a window, a phone screen — and whatever you point the camera at becomes the whole scene.\n\nThere\'s also just less of everyone else at night. Fewer cars, fewer people, fewer opinions. It\'s the closest thing to having a city to yourself.' },
-        ];
-        const tabs = document.querySelectorAll('.notes-tab');
-        const panel = document.getElementById('notes-panel');
-        const tagEl = document.getElementById('notes-tag');
-        const titleEl = document.getElementById('notes-title');
-        const bodyEl = document.getElementById('notes-body');
-        const toggleBtn = document.getElementById('notes-toggle');
-        let cur = 0;
-        let expanded = false;
-
-        function render(i, animate = true) {
-            const d = data[i];
-            function apply() {
-                tagEl.textContent = d.tag;
-                titleEl.textContent = d.title;
-                bodyEl.textContent = d.body;
-                expanded = false;
-                bodyEl.classList.remove('expanded');
-                toggleBtn.textContent = 'Read more →';
-                panel.classList.remove('swapping');
-            }
-            if (animate) { panel.classList.add('swapping'); setTimeout(apply, 220); } else { apply(); }
-            tabs.forEach((n, j) => n.classList.toggle('active', j === i));
-            cur = i;
-        }
-        tabs.forEach(tab => {
-            tab.addEventListener('click', () => {
-                const i = parseInt(tab.dataset.note, 10);
-                if (i !== cur) render(i, true);
-            });
-        });
-        toggleBtn.addEventListener('click', () => {
-            expanded = !expanded;
-            bodyEl.classList.toggle('expanded', expanded);
-            toggleBtn.textContent = expanded ? 'Show less ←' : 'Read more →';
-        });
-        render(0, false);
-    })();
-
-    (function copyable() {
-        document.querySelectorAll('.copyable').forEach(el => {
-            const handler = (e) => {
-                e.stopPropagation();
-                const t = el.dataset.copy;
-                if (navigator.clipboard?.writeText) {
-                    navigator.clipboard.writeText(t).then(() => window.showToast?.('Copied: ' + t));
-                } else {
-                    window.showToast?.(t);
-                }
-            };
-            el.addEventListener('click', handler);
-            el.addEventListener('keydown', (e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); handler(e); } });
-        });
-    })();
-
-    (function easterEggClicks() {
-        const link = document.getElementById('easter-egg-link');
-        let count = 0;
-        link.addEventListener('click', (e) => {
-            e.preventDefault();
-            count++;
-            if (count >= 7) window.location.href = 'easteregg.html';
-        });
-    })();
-
-    (function easterEggKeys() {
-        let buf = '';
-        document.addEventListener('keydown', (e) => {
-            if (e.key.length !== 1) return;
-            buf = (buf + e.key.toLowerCase()).slice(-6);
-            if (buf === 'ritual') {
-                window.showToast?.('you found it. hi.');
-                document.body.style.transition = 'filter 0.15s ease';
-                document.body.style.filter = 'invert(1)';
-                setTimeout(() => { document.body.style.filter = 'none'; }, 150);
-                buf = '';
-            }
-        });
-    })();
-
-    (function footerStatus() {
-        const footerRight = document.getElementById('footer-right');
-        const statuses = [
-            "probably still asleep", "up way too late", "up way too late", "technically tomorrow now",
-            "the quiet hour", "too early for anyone", "coffee, first attempt", "getting going, slowly",
-            "awake, unconvinced", "mid-morning, focused-ish", "in the middle of something",
-            "nearly lunch", "lunch, probably late", "afternoon slump incoming", "afternoon slump, arrived",
-            "second coffee", "winding toward evening", "closing tabs", "golden hour",
-            "dinner or a walk", "settling in for the night", "editing photos", "the good hours begin",
-            "still here, still working"
-        ];
-        function update() {
-            const now = new Date();
-            const h = now.getHours();
-            const ts = now.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
-            const status = statuses[h] || "doing something";
-            if (footerRight) footerRight.textContent = '© 2026 — you\'re reading this at ' + ts + ' · ' + status;
-        }
-        update();
-        setInterval(update, 20000);
-    })();
-
-    (function poemOverlay() {
-        const overlay = document.getElementById('poem-overlay');
-        const trigger = document.getElementById('writing-interest');
-        const closeBtn = document.getElementById('poem-close-btn');
-        if (!overlay || !trigger) return;
-        trigger.addEventListener('click', () => { overlay.classList.add('active'); document.body.classList.add('overlay-open'); });
-        closeBtn.addEventListener('click', () => { overlay.classList.remove('active'); document.body.classList.remove('overlay-open'); });
-        overlay.addEventListener('click', (e) => { if (e.target === overlay) { overlay.classList.remove('active'); document.body.classList.remove('overlay-open'); } });
-        document.addEventListener('keydown', (e) => { if (e.key === 'Escape' && overlay.classList.contains('active')) { overlay.classList.remove('active'); document.body.classList.remove('overlay-open'); } });
-    })();
-
-    (function glitchOverlay() {
-        const overlay = document.getElementById('glitch-overlay');
-        const trigger = document.getElementById('design-interest');
-        const closeBtn = document.getElementById('glitch-close-btn');
-        const text = document.getElementById('glitch-ritual-text');
-        if (!overlay || !trigger) return;
-        let timers = [];
-        function startCycle() {
-            stopCycle();
-            function schedIntense() {
-                if (!overlay.classList.contains('active')) return;
-                text.classList.add('intense');
-                timers.push(setTimeout(() => text.classList.remove('intense'), 150 + Math.random() * 300));
-                timers.push(setTimeout(schedIntense, 1200 + Math.random() * 4000));
-            }
-            timers.push(setTimeout(schedIntense, 800));
-        }
-        function stopCycle() { timers.forEach(t => clearTimeout(t)); timers = []; text?.classList.remove('intense'); }
-        trigger.addEventListener('click', () => { overlay.classList.add('active'); document.body.classList.add('overlay-open'); startCycle(); });
-        closeBtn.addEventListener('click', () => { overlay.classList.remove('active'); document.body.classList.remove('overlay-open'); stopCycle(); });
-        overlay.addEventListener('click', (e) => { if (e.target === overlay) { overlay.classList.remove('active'); document.body.classList.remove('overlay-open'); stopCycle(); } });
-        document.addEventListener('keydown', (e) => { if (e.key === 'Escape' && overlay.classList.contains('active')) { overlay.classList.remove('active'); document.body.classList.remove('overlay-open'); stopCycle(); } });
-    })();
-
-    (function cardFlip() {
-        const overlay = document.getElementById('card-overlay');
-        const trigger = document.getElementById('card-interest');
-        const closeBtn = document.getElementById('card-close-btn');
-        const scene = document.getElementById('card-scene');
-        if (!overlay || !trigger) return;
-        trigger.addEventListener('click', () => { overlay.classList.add('active'); document.body.classList.add('overlay-open'); });
-        closeBtn.addEventListener('click', () => { overlay.classList.remove('active'); document.body.classList.remove('overlay-open'); scene.classList.remove('flipped', 'hover-flipped'); });
-        overlay.addEventListener('click', (e) => { if (e.target === overlay) { overlay.classList.remove('active'); document.body.classList.remove('overlay-open'); scene.classList.remove('flipped', 'hover-flipped'); } });
-        document.addEventListener('keydown', (e) => { if (e.key === 'Escape' && overlay.classList.contains('active')) { overlay.classList.remove('active'); document.body.classList.remove('overlay-open'); scene.classList.remove('flipped', 'hover-flipped'); } });
-        scene.addEventListener('mouseenter', () => { if (!scene.classList.contains('flipped')) scene.classList.add('hover-flipped'); });
-        scene.addEventListener('mouseleave', () => { scene.classList.remove('hover-flipped'); });
-        scene.addEventListener('click', () => {
-            scene.classList.toggle('flipped');
-            if (scene.classList.contains('flipped')) scene.classList.remove('hover-flipped');
-        });
-        scene.addEventListener('touchstart', (e) => {
-            e.preventDefault();
-            scene.classList.toggle('flipped');
-            if (scene.classList.contains('flipped')) scene.classList.remove('hover-flipped');
-        });
-    })();
-
-    (function guestbook() {
-        const overlay = document.getElementById('guestbook-overlay');
-        const trigger = document.getElementById('guestbook-interest');
-        const footerLink = document.getElementById('footer-guestbook-link');
-        const closeBtn = document.getElementById('guestbook-close-btn');
-        const form = document.getElementById('guestbook-form');
-        const nameInp = document.getElementById('guestbook-name');
-        const msgInp = document.getElementById('guestbook-message');
-        const list = document.getElementById('guestbook-list');
-        const empty = document.getElementById('guestbook-empty');
-        const entries = [];
-        let seq = 0;
-
-        function open() { overlay.classList.add('active'); document.body.classList.add('overlay-open'); }
-        function close() { overlay.classList.remove('active'); document.body.classList.remove('overlay-open'); }
-        trigger?.addEventListener('click', open);
-        footerLink?.addEventListener('click', (e) => { e.preventDefault(); open(); });
-        closeBtn.addEventListener('click', close);
-        overlay.addEventListener('click', (e) => { if (e.target === overlay) close(); });
-        document.addEventListener('keydown', (e) => { if (e.key === 'Escape' && overlay.classList.contains('active')) close(); });
-
-        function render() {
-            list.innerHTML = '';
-            if (entries.length === 0) { list.appendChild(empty); return; }
-            entries.slice().reverse().forEach(entry => {
-                const row = document.createElement('div');
-                row.className = 'guestbook-entry';
-                const num = document.createElement('div');
-                num.className = 'guestbook-entry-num';
-                num.textContent = 'N°' + String(entry.num).padStart(3, '0');
-                const body = document.createElement('div');
-                body.className = 'guestbook-entry-body';
-                const nm = document.createElement('div');
-                nm.className = 'guestbook-entry-name';
-                nm.textContent = entry.name;
-                const ms = document.createElement('div');
-                ms.className = 'guestbook-entry-msg';
-                ms.textContent = '"' + entry.message + '"';
-                body.appendChild(nm);
-                body.appendChild(ms);
-                row.appendChild(num);
-                row.appendChild(body);
-                list.appendChild(row);
-            });
-        }
-        form.addEventListener('submit', (e) => {
-            e.preventDefault();
-            const name = nameInp.value.trim() || 'someone';
-            const message = msgInp.value.trim();
-            if (!message) return;
-            seq++;
-            entries.push({ name, message, num: seq });
-            render();
-            nameInp.value = '';
-            msgInp.value = '';
-            window.showToast?.('Signed. Thanks for stopping by.');
-        });
-    })();
-
-    (function musicPlayer() {
-        const player = document.getElementById('music-player');
-        const trigger = document.getElementById('music-interest');
-        const closeBtn = document.getElementById('player-close');
-        const dragHandle = document.getElementById('player-drag-handle');
-        if (!player || !trigger) return;
-        trigger.addEventListener('click', () => {
-            player.classList.add('active');
-            if (!player.style.top) { player.style.top = 'calc(50% - 110px)'; player.style.left = 'calc(50% - 135px)'; }
-        });
-        closeBtn.addEventListener('click', () => { player.classList.remove('active'); audio.pause(); });
-
-        let isDragging = false, sx, sy, il, it;
-        dragHandle.addEventListener('mousedown', (e) => {
-            if (e.target.closest('.player-close-btn')) return;
-            isDragging = true;
-            sx = e.clientX; sy = e.clientY;
-            const r = player.getBoundingClientRect();
-            il = r.left; it = r.top;
-            player.style.transition = 'none';
-            e.preventDefault();
-        });
-        window.addEventListener('mousemove', (e) => {
-            if (!isDragging) return;
-            let nl = il + e.clientX - sx, nt = it + e.clientY - sy;
-            nl = Math.min(Math.max(nl, 0), window.innerWidth - player.offsetWidth);
-            nt = Math.min(Math.max(nt, 0), window.innerHeight - player.offsetHeight);
-            player.style.left = nl + 'px';
-            player.style.top = nt + 'px';
-        });
-        window.addEventListener('mouseup', () => { if (isDragging) { isDragging = false; player.style.transition = 'opacity 0.3s ease'; } });
-
-        const volBtn = document.getElementById('volume-btn');
-        const volPopup = document.getElementById('volume-popup');
-        volBtn.addEventListener('click', (e) => { e.stopPropagation(); volPopup.classList.toggle('active'); });
-        document.addEventListener('click', (e) => { if (!volBtn.contains(e.target) && !volPopup.contains(e.target)) volPopup.classList.remove('active'); });
-
-        const audio = new Audio();
-        const playlist = [
-            { title: 'Where Have You Been', artist: 'Bryan V', src: 'music/Bryan V - Where Have You Been.wav' },
-            { title: 'Only One', artist: 'Carlie Hanson', src: 'music/Carlie Hanson - Only One.wav' },
-            { title: 'Reforget', artist: 'Cash Cash ft. Violet Days', src: 'music/Cash Cash, Violet Days - Reforget (feat. Violet Days).wav' },
-            { title: 'Mama', artist: 'Clean Bandit ft. Ellie Goulding', src: 'music/Clean Bandit, Ellie Goulding - Mama (feat. Ellie Goulding).wav' },
-            { title: 'Let It Be Me', artist: 'David Guetta ft. Ava Max', src: 'music/David Guetta, Ava Max - Let It Be Me (feat. Ava Max).wav' },
-            { title: 'Wilder', artist: 'Gamma Skies, Cleo Kelley', src: 'music/Gamma Skies, Cleo Kelley - Wilder.wav' },
-            { title: 'Body Back', artist: 'Gryffin, Maia Wright', src: 'music/Gryffin, Maia Wright - Body Back.wav' },
-            { title: 'Wild', artist: 'Jonas Blue', src: 'music/Jonas Blue, Chelcee Grimes, TINI, JHAYCO - Wild.wav' },
-            { title: 'Mona Lisa', artist: 'K-391', src: 'music/K-391 - Mona Lisa.wav' },
-            { title: 'Dance Alone', artist: 'Preston Pablo', src: 'music/Preston Pablo, Juliana - Dance Alone (Juliana Remix).wav' },
-            { title: 'Floating Through Space', artist: 'Sia, David Guetta', src: 'music/Sia, David Guetta - Floating Through Space.wav' },
-            { title: 'Harder', artist: 'Tiësto ft. Talay Riley', src: 'music/Tiësto, KSHMR, Talay Riley - Harder (feat. Talay Riley).wav' },
-        ];
-        let curTrack = 0, isPlaying = false;
-        const trackTitle = document.getElementById('track-title');
-        const trackArtist = document.getElementById('track-artist');
-        const playBtn = document.getElementById('player-play');
-        const prevBtn = document.getElementById('player-prev');
-        const nextBtn = document.getElementById('player-next');
-        const progBar = document.getElementById('player-progress');
-        const curTimeEl = document.getElementById('current-time');
-        const durTimeEl = document.getElementById('duration-time');
-        const volBar = document.getElementById('player-volume');
-
-        function loadTrack(i) {
-            const t = playlist[i];
-            audio.src = t.src;
-            audio.load();
-            trackTitle.textContent = t.title;
-            trackArtist.textContent = t.artist;
-            progBar.value = 0;
-            curTimeEl.textContent = '0:00';
-            durTimeEl.textContent = '0:00';
-            if (isPlaying) audio.play().catch(() => {});
-        }
-        function fmt(s) { const m = Math.floor(s / 60), sec = Math.floor(s % 60); return m + ':' + sec.toString().padStart(2, '0'); }
-        audio.addEventListener('loadedmetadata', () => { durTimeEl.textContent = fmt(audio.duration); progBar.max = audio.duration; });
-        audio.addEventListener('timeupdate', () => { progBar.value = audio.currentTime; curTimeEl.textContent = fmt(audio.currentTime); });
-        audio.addEventListener('ended', () => { curTrack = (curTrack + 1) % playlist.length; loadTrack(curTrack); audio.play().catch(() => {}); });
-        playBtn.addEventListener('click', () => {
-            if (isPlaying) { audio.pause(); playBtn.innerHTML = '<i class="fas fa-play"></i>'; }
-            else { audio.play().catch(() => {}); playBtn.innerHTML = '<i class="fas fa-pause"></i>'; }
-            isPlaying = !isPlaying;
-            player.classList.toggle('playing', isPlaying);
-        });
-        prevBtn.addEventListener('click', () => { curTrack = (curTrack - 1 + playlist.length) % playlist.length; loadTrack(curTrack); if (isPlaying) audio.play().catch(() => {}); });
-        nextBtn.addEventListener('click', () => { curTrack = (curTrack + 1) % playlist.length; loadTrack(curTrack); if (isPlaying) audio.play().catch(() => {}); });
-        progBar.addEventListener('input', () => { audio.currentTime = progBar.value; });
-        volBar.addEventListener('input', () => { audio.volume = volBar.value; });
-        audio.volume = 0.8;
-        volBar.value = 0.8;
-        loadTrack(curTrack);
-    })();
-
-    (function filmstripControls() {
-        const wrap = document.getElementById('filmstrip-wrap');
-        const prev = document.getElementById('filmstrip-prev');
-        const next = document.getElementById('filmstrip-next');
-        if (!wrap || !prev || !next) return;
-        prev.addEventListener('click', () => wrap.scrollBy({ left: -320, behavior: 'smooth' }));
-        next.addEventListener('click', () => wrap.scrollBy({ left: 320, behavior: 'smooth' }));
-
-        let isDown = false, startX, scrollLeft;
-        wrap.addEventListener('mousedown', (e) => {
-            isDown = true;
-            wrap.style.cursor = 'grabbing';
-            startX = e.pageX - wrap.offsetLeft;
-            scrollLeft = wrap.scrollLeft;
-        });
-        window.addEventListener('mouseup', () => { isDown = false; wrap.style.cursor = ''; });
-        wrap.addEventListener('mouseleave', () => { isDown = false; wrap.style.cursor = ''; });
-        wrap.addEventListener('mousemove', (e) => {
-            if (!isDown) return;
-            e.preventDefault();
-            const x = e.pageX - wrap.offsetLeft;
-            wrap.scrollLeft = scrollLeft - (x - startX) * 1.4;
-        });
-    })();
-
-    console.log('%cRitual %c— archive online. %c✦',
-        'color:#ff3346;font-size:1.2em;font-family:monospace;',
-        'color:#8c8478;font-size:0.9em;',
-        'color:#d81f2f;');
-    console.log('%cA personal archive. Not a portfolio. Not a resumé. Just a drawer.',
-        'color:#5c564c;font-style:italic;');
-</script>
 </body>
 </html>
