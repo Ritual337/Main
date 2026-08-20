@@ -213,7 +213,7 @@
         .section { padding: 6rem 2rem; max-width: 1400px; margin: 0 auto; position: relative; }
         @media (max-width: 860px) { .section { padding: 3.5rem 1.2rem; } }
 
-        .eyebrow { display: flex; align-items: center; gap: 1rem; margin-bottom: 2.6rem; }
+        .eyebrow { display: flex; align-items: center; gap: 1rem; margin-bottom: 2.6rem; position: relative; }
         .eyebrow-num {
             font-family: var(--mono); font-size: .62rem; letter-spacing: .18em; color: var(--bg);
             background: var(--red); padding: .25rem .5rem; border-radius: 2px;
@@ -286,6 +286,15 @@
         #dossier {
             display: grid; grid-template-columns: 1.05fr .95fr; gap: 0;
             border-top: 1px solid var(--line); border-bottom: 1px solid var(--line);
+            position: relative;
+        }
+        .meo-mark {
+            position: absolute; left: 128px; top: 50%; transform: translateY(-50%);
+            width: 120px; z-index: 50; pointer-events: none;
+        }
+        .meo-mark img { width: 100%; filter: drop-shadow(0 6px 12px rgba(0,0,0,.55)); }
+        @media (max-width: 860px) {
+            .meo-mark { width: 90px; left: 100px; }
         }
         .dossier-text { padding: 5rem 3rem; display: flex; flex-direction: column; justify-content: center; gap: 1.8rem; border-right: 1px solid var(--line); }
         .dossier-quote {
@@ -335,7 +344,7 @@
         .log-card {
             background: var(--bg2); padding: 1.9rem 1.6rem 1.7rem; text-align: left; font-family: inherit;
             color: inherit; border: none; cursor: pointer; position: relative; display: flex; flex-direction: column;
-            gap: .6rem; transition: background .35s ease, transform .3s ease;
+            gap: .6rem; transition: background .35s ease, transform .3s ease; text-decoration: none;
         }
         .log-card::before {
             content: ''; position: absolute; top: 0; left: 0; width: 100%; height: 2px; background: var(--red);
@@ -354,7 +363,7 @@
             opacity: 0; transition: opacity .3s, color .3s;
         }
         .log-card:hover .log-icon { opacity: 1; color: var(--red-bright); }
-        .log-card.log-card-placeholder { background: var(--bg); }
+        .log-card.log-card-placeholder { background: var(--bg2); }
         .log-card.log-card-placeholder .log-time { color: var(--ink-dim); }
         .log-card.log-card-placeholder .log-icon { color: var(--ink-dim); opacity: .55; }
         @media (max-width: 860px) {
@@ -791,7 +800,11 @@
 
         <section id="dossier" class="reveal">
             <div class="dossier-text">
-                <div class="eyebrow"><span class="eyebrow-num">01</span><span class="eyebrow-text">Dossier</span><span class="eyebrow-line"></span></div>
+                <div class="eyebrow">
+                    <span class="eyebrow-num">01</span><span class="eyebrow-text">Dossier</span>
+                    <div class="meo-mark"><img src="MeoCat.webp" alt="Meo, sleeping" loading="lazy" /></div>
+                    <span class="eyebrow-line"></span>
+                </div>
                 <p class="dossier-quote">"I'm Ritual. I make things — visuals, ideas, sometimes mistakes. This is the drawer where I put what doesn't fit anywhere else."</p>
                 <p class="dossier-body">Drawn to texture, contrast, and things slightly broken or unfinished. Film photography at night, design systems during the day, and music that sounds best at 2am. This site gets built past midnight, edited slowly, and is never quite finished — on purpose. If something looks unpolished, that's not a bug.</p>
             </div>
@@ -812,72 +825,72 @@
             <div class="eyebrow"><span class="eyebrow-num">02</span><span class="eyebrow-text">Index</span><span class="eyebrow-line"></span></div>
             <p class="section-note">Eight checkpoints that hold the day together — plus a few open slots for what's next.</p>
             <div class="log-grid">
-                <button class="log-card featured" type="button">
+                <a class="log-card featured" href="#">
                     <span class="log-time">05:30</span>
-                    <span class="log-name">The Quiet Hour</span>
+                    <span class="log-name">Button 1</span>
                     <span class="log-desc">Before the world wakes. Coffee, silence, a notebook. Nothing urgent exists yet.</span>
                     <span class="log-icon">✦</span>
-                </button>
-                <button class="log-card" type="button">
+                </a>
+                <a class="log-card" href="#">
                     <span class="log-time">07:00</span>
-                    <span class="log-name">First Light</span>
+                    <span class="log-name">Button 2</span>
                     <span class="log-desc">Golden hour through the window. If the light is right, I grab the camera.</span>
                     <span class="log-icon">☀</span>
-                </button>
-                <button class="log-card" type="button">
+                </a>
+                <a class="log-card" href="#">
                     <span class="log-time">12:00</span>
-                    <span class="log-name">Midday Reset</span>
+                    <span class="log-name">Button 3</span>
                     <span class="log-desc">Step away from screens. A walk, a stretch, a moment to remember I have a body.</span>
                     <span class="log-icon">↺</span>
-                </button>
-                <button class="log-card" type="button">
+                </a>
+                <a class="log-card" href="#">
                     <span class="log-time">15:00</span>
-                    <span class="log-name">The Slump Hour</span>
+                    <span class="log-name">Button 4</span>
                     <span class="log-desc">Second coffee. Sometimes third. Staring at something unfinished until it clicks.</span>
                     <span class="log-icon">☕</span>
-                </button>
-                <button class="log-card" type="button">
+                </a>
+                <a class="log-card" href="#">
                     <span class="log-time">19:00</span>
-                    <span class="log-name">Golden Exit</span>
+                    <span class="log-name">Button 5</span>
                     <span class="log-desc">If the sky cooperates, I'm outside. Camera in hand, chasing the last light.</span>
                     <span class="log-icon">☽</span>
-                </button>
-                <button class="log-card" type="button">
+                </a>
+                <a class="log-card" href="#">
                     <span class="log-time">22:00</span>
-                    <span class="log-name">The Good Hours</span>
+                    <span class="log-name">Button 6</span>
                     <span class="log-desc">Night falls. The real work begins — editing, building, thinking without interruption.</span>
                     <span class="log-icon">◈</span>
-                </button>
-                <button class="log-card" type="button">
+                </a>
+                <a class="log-card" href="#">
                     <span class="log-time">00:00</span>
-                    <span class="log-name">Midnight Inventory</span>
+                    <span class="log-name">Button 7</span>
                     <span class="log-desc">What got done? What didn't? A quiet check-in with myself before the day officially ends.</span>
                     <span class="log-icon">◉</span>
-                </button>
-                <button class="log-card" type="button">
+                </a>
+                <a class="log-card" href="#">
                     <span class="log-time">02:00</span>
-                    <span class="log-name">The Last Note</span>
+                    <span class="log-name">Button 8</span>
                     <span class="log-desc">One final thought written down. The phone goes face-down. The room goes dark.</span>
                     <span class="log-icon">✧</span>
-                </button>
-                <button class="log-card log-card-placeholder" type="button" data-placeholder-msg="This slot isn't written yet — check back soon.">
+                </a>
+                <a class="log-card log-card-placeholder" href="#">
                     <span class="log-time">INDEX</span>
-                    <span class="log-name">Button 1</span>
+                    <span class="log-name">Button 9</span>
                     <span class="log-desc">Reserved for what's next. Never quite finished — on purpose.</span>
                     <span class="log-icon">✚</span>
-                </button>
-                <button class="log-card log-card-placeholder" type="button" data-placeholder-msg="Still empty. Something will live here eventually.">
+                </a>
+                <a class="log-card log-card-placeholder" href="#">
                     <span class="log-time">INDEX</span>
-                    <span class="log-name">Button 2</span>
+                    <span class="log-name">Button 10</span>
                     <span class="log-desc">An open slot in the index. Nothing to see yet — that's fine.</span>
                     <span class="log-icon">✚</span>
-                </button>
-                <button class="log-card log-card-placeholder" type="button" data-placeholder-msg="Last slot, also empty. The grid just likes being whole.">
+                </a>
+                <a class="log-card log-card-placeholder" href="#">
                     <span class="log-time">INDEX</span>
-                    <span class="log-name">Button 3</span>
+                    <span class="log-name">Button 11</span>
                     <span class="log-desc">Held open so the grid stays whole. More entries, eventually.</span>
                     <span class="log-icon">✚</span>
-                </button>
+                </a>
             </div>
         </section>
 
@@ -991,37 +1004,37 @@
                     <span class="index-name">Photography</span>
                     <span class="index-desc">Film mostly. 35mm. The grain matters more than the pixels.</span>
                     <span class="index-arrow">→</span>
-                </button>
+                </a>
                 <button class="index-cell featured" type="button" id="design-interest">
                     <span class="index-num">02</span>
                     <span class="index-name">Design</span>
                     <span class="index-desc">Visual systems, type, and things that feel right without explanation.</span>
                     <span class="index-arrow">→</span>
-                </button>
+                </a>
                 <button class="index-cell featured" type="button" id="music-interest">
                     <span class="index-num">03</span>
                     <span class="index-name">Music</span>
                     <span class="index-desc">Whatever sounds good at 2am. Player included.</span>
                     <span class="index-arrow">→</span>
-                </button>
+                </a>
                 <button class="index-cell" type="button" id="card-interest">
                     <span class="index-num">04</span>
                     <span class="index-name">Card</span>
                     <span class="index-desc">Digital business card — hover or tap to flip. Old-school charm.</span>
                     <span class="index-arrow">→</span>
-                </button>
+                </a>
                 <button class="index-cell" type="button" id="writing-interest">
                     <span class="index-num">05</span>
                     <span class="index-name">Writing</span>
                     <span class="index-desc">Observations. Fragments. Nothing finished, everything true.</span>
                     <span class="index-arrow">→</span>
-                </button>
+                </a>
                 <button class="index-cell featured" type="button" id="guestbook-interest">
                     <span class="index-num">06</span>
                     <span class="index-name">Guestbook</span>
                     <span class="index-desc">Leave a note. Read what everyone else left too.</span>
                     <span class="index-arrow">→</span>
-                </button>
+                </a>
             </div>
         </section>
     </main>
