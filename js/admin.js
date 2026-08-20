@@ -375,12 +375,7 @@
         showLogin();
     })();
 
-    document.getElementById('refresh-dash-btn').addEventListener('click', () => {
-        refreshDashboard();
-        window.showToast?.('Refreshed.');
-    });
-
-    // ---- Clear activity log --------------------------------------------
+// ---- Clear activity log --------------------------------------------
 document.getElementById('clear-audit-btn').addEventListener('click', () => {
     const entries = readJSON(localStorage, AUDIT_KEY, []);
     if (entries.length === 0) {
@@ -392,6 +387,12 @@ document.getElementById('clear-audit-btn').addEventListener('click', () => {
     localStorage.removeItem(AUDIT_KEY);
     window.showToast?.('Activity log cleared.');
     renderAuditLog();
+});
+
+// ---- Refresh dashboard button --------------------------------------
+document.getElementById('refresh-dash-btn').addEventListener('click', () => {
+    refreshDashboard();
+    window.showToast?.('Refreshed.');
 });
 
 })();
