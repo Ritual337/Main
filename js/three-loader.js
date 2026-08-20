@@ -16,7 +16,7 @@
     lib.src = 'https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js';
     lib.onload = function () {
         const scene = document.createElement('script');
-        scene.src = 'three-scene.js';
+        scene.src = 'js/three-scene.js';
         document.body.appendChild(scene);
     };
     lib.onerror = function () {
