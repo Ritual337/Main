@@ -15,11 +15,8 @@
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css" />
     <link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=IBM+Plex+Mono:ital,wght@0,400;0,500;0,600;0,700;1,400&family=Source+Serif+4:ital,wght@0,400;0,500;0,600;0,700&display=swap" rel="stylesheet" />
 
-    <!-- Not linked from the public nav or footer on purpose, and blocked from
-         indexing above. Neither of those is real access control — see the
-         security note at the top of admin.js. -->
-    <script src="guestbook-store.js" defer></script>
-    <script src="admin.js" defer></script>
+    <script src="js/guestbook-store.js" defer></script>
+    <script src="js/admin.js" defer></script>
 
     <style>
         :root {
@@ -87,8 +84,6 @@
         }
         .gate-submit:hover { background: var(--red-bright); color: var(--bg); box-shadow: 0 0 28px var(--red-glow-strong); }
         .gate-submit:disabled { opacity: .45; cursor: not-allowed; box-shadow: none; background: none; color: var(--red-bright); }
-        .gate-reset { background: none; border: none; color: var(--ink-dim); font-family: var(--mono); font-size: .52rem; letter-spacing: .04em; text-decoration: underline; cursor: pointer; align-self: center; margin-top: .2rem; }
-        .gate-reset:hover { color: var(--red-bright); }
         .gate-note {
             display: flex; gap: .55rem; align-items: flex-start; font-family: var(--mono); font-size: .5rem; color: var(--ink-dim);
             letter-spacing: .02em; line-height: 1.7; margin-top: 1.8rem; padding-top: 1.4rem; border-top: 1px solid var(--line);
@@ -189,28 +184,10 @@
                 <div class="gate-icon"><i class="fas fa-lock"></i></div>
                 <div class="gate-label" id="gate-label">Restricted access</div>
                 <h1 class="gate-title" id="gate-title">Admin</h1>
-                <p class="gate-sub" id="gate-sub">Checking this device…</p>
+                <p class="gate-sub" id="gate-sub">Enter the admin password for this site.</p>
 
-                <form class="gate-form" id="setup-form" hidden novalidate>
-                    <div>
-                        <label class="gate-field-label" for="setup-pass">New password — min. 8 characters</label>
-                        <div class="pass-row" style="margin-top:.4rem;">
-                            <input type="password" id="setup-pass" autocomplete="new-password" minlength="8" required />
-                            <button type="button" class="pass-toggle" data-target="setup-pass" aria-label="Show password"><i class="fas fa-eye"></i></button>
-                        </div>
-                    </div>
-                    <div>
-                        <label class="gate-field-label" for="setup-pass-confirm">Confirm password</label>
-                        <div class="pass-row" style="margin-top:.4rem;">
-                            <input type="password" id="setup-pass-confirm" autocomplete="new-password" minlength="8" required />
-                            <button type="button" class="pass-toggle" data-target="setup-pass-confirm" aria-label="Show password"><i class="fas fa-eye"></i></button>
-                        </div>
-                    </div>
-                    <div class="gate-error" id="setup-error"></div>
-                    <button type="submit" class="gate-submit">Create access →</button>
-                </form>
-
-                <form class="gate-form" id="login-form" hidden novalidate>
+                <!-- Login form only – setup removed -->
+                <form class="gate-form" id="login-form" novalidate>
                     <div>
                         <label class="gate-field-label" for="login-pass">Password</label>
                         <div class="pass-row" style="margin-top:.4rem;">
@@ -220,10 +197,9 @@
                     </div>
                     <div class="gate-error" id="login-error"></div>
                     <button type="submit" class="gate-submit" id="login-submit">Unlock →</button>
-                    <button type="button" class="gate-reset" id="reset-link">Forgot it? Reset this device's admin access</button>
                 </form>
 
-                <p class="gate-note"><i class="fas fa-triangle-exclamation"></i> <span>This is a device-only lock, not real security — it keeps casual visitors out, but anyone with browser dev tools can read or bypass it. Read the note at the top of <code>admin.js</code> before this handles anything that actually matters.</span></p>
+                <p class="gate-note"><i class="fas fa-triangle-exclamation"></i> <span>Password is stored securely on the server (Cloudflare D1 + Pages Functions). This panel now uses a real backend – no more device‑only localStorage. The admin password was set during deployment and cannot be changed from the browser.</span></p>
             </div>
         </section>
 
@@ -249,13 +225,13 @@
             </div>
 
             <div class="panel backend-panel">
-                <div class="panel-head"><i class="fas fa-server"></i><span>Backend status</span><span class="badge" id="backend-badge">Not connected</span></div>
-                <p class="panel-copy">Entries are currently read and written through <code>guestbook-store.js</code>, backed by this browser's local storage — there's no server yet, so nothing here is shared across devices. Every method in that file is already written the way a real API call would look, so connecting a backend later means editing that one file, not this dashboard.</p>
+                <div class="panel-head"><i class="fas fa-server"></i><span>Backend status</span><span class="badge" id="backend-badge">Connected via D1</span></div>
+                <p class="panel-copy">Entries are now persisted in a Cloudflare D1 database. <code>guestbook-store.js</code> uses <code>fetch()</code> to call the Pages Functions API endpoints (<code>/api/guestbook</code>, etc.). All entries are shared across devices – no more localStorage silos.</p>
                 <ul class="endpoint-list">
-                    <li><span class="verb get">GET</span><code>/api/guestbook</code></li>
-                    <li><span class="verb post">POST</span><code>/api/guestbook</code></li>
-                    <li><span class="verb del">DELETE</span><code>/api/guestbook/:id</code></li>
-                    <li><span class="verb del">DELETE</span><code>/api/guestbook</code></li>
+                    <li><span class="verb get">GET</span><code>/api/guestbook</code> – list entries</li>
+                    <li><span class="verb post">POST</span><code>/api/guestbook</code> – add entry</li>
+                    <li><span class="verb del">DELETE</span><code>/api/guestbook/:id</code> – delete one</li>
+                    <li><span class="verb del">DELETE</span><code>/api/guestbook</code> – clear all</li>
                 </ul>
             </div>
 

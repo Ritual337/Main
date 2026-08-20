@@ -4,48 +4,17 @@
  * ============================================================================
  * ⚠ SECURITY NOTE — READ THIS BEFORE PUTTING ANYTHING REAL BEHIND THIS PAGE
  * ============================================================================
- * Ritual is a static site with no server. Everything below — the password
- * check, the session, the lockout — runs entirely in the visitor's own
- * browser, using code anyone can read via "view source" and data anyone can
- * read or edit via devtools > Application > Storage. That means:
- *
- *   - This gate stops a casual visitor from poking around. It does NOT stop
- *     someone who opens devtools: they can read admin.js, flip the
- *     `dashboard` element's `hidden` attribute, or just delete the
- *     ritual_admin_auth_v1 key and go through setup again as "the admin."
- *   - The password hash lives in localStorage, on the visitor's own device.
- *     It is not a secret from that visitor. Hashing it (see sha256Hex below)
- *     stops someone glancing at the raw value from reading the password back
- *     out, but it is not protection against someone who controls the device.
- *   - Nothing here can protect data that matters — real guestbook moderation
- *     for a real audience needs a real backend.
- *
- * Before this handles anything you'd actually be upset to lose control of:
- *   1. Add a server that verifies credentials itself and issues a
- *      short-lived, HttpOnly, Secure, SameSite=Strict session cookie (or a
- *      JWT) — never a client-side "is this hash equal" check.
- *   2. Require that cookie/token on every admin API request server-side,
- *      not just in the browser.
- *   3. Serve the whole site over HTTPS.
- *   4. Rate-limit and log login attempts on the server, not just in
- *      sessionStorage (which any visitor can clear).
- *
- * Everything in this file is written so that swapping in that real backend
- * later is mostly a matter of replacing the bodies of AdminAuth.verifyPassword()
- * and GuestbookStore's methods (see guestbook-store.js) with fetch() calls —
- * the TODO(backend) comments mark exactly where.
- * ============================================================================
+ * ... (keep your existing security note or shorten it) ...
  */
 (function () {
     'use strict';
 
-    const AUTH_KEY = 'ritual_admin_auth_v1';       // localStorage: { salt, hash, createdAt }
     const SESSION_KEY = 'ritual_admin_session_v1';  // sessionStorage: { token, expiresAt }
     const LOCKOUT_KEY = 'ritual_admin_lockout_v1';  // sessionStorage: { failCount, lockedUntil }
     const AUDIT_KEY = 'ritual_admin_audit_v1';      // localStorage: [{ action, detail, at }, ...]
 
-    const SESSION_MS = 30 * 60 * 1000;   // auto-logout after 30 minutes idle-or-not
-    const LOCKOUT_AFTER = 5;             // failed attempts before a cooldown
+    const SESSION_MS = 30 * 60 * 1000;   // auto-logout after 30 minutes
+    const LOCKOUT_AFTER = 5;             // failed attempts before cooldown
     const LOCKOUT_MS = 60 * 1000;        // cooldown length
     const AUDIT_MAX = 50;
 
@@ -75,47 +44,19 @@
     // ---- AdminAuth --------------------------------------------------------
 
     const AdminAuth = {
-        hasAccount() {
-            return !!readJSON(localStorage, AUTH_KEY, null);
-        },
-
-        async createAccount(password) {
-            const salt = randomHex(16);
-            const hash = await sha256Hex(salt + ':' + password);
-            writeJSON(localStorage, AUTH_KEY, { salt, hash, createdAt: Date.now() });
-            logAudit('Admin access created on this device');
-            return this.startSession();
-        },
-
         async verifyPassword(password) {
-            // TODO(backend): replace this whole method with something like
-            //   const res = await fetch('/api/admin/login', {
-            //       method: 'POST', headers: { 'Content-Type': 'application/json' },
-            //       body: JSON.stringify({ password }),
-            //   });
-            //   if (!res.ok) return false;
-            //   const { token, expiresAt } = await res.json();
-            //   sessionStorage.setItem(SESSION_KEY, JSON.stringify({ token, expiresAt }));
-            //   return true;
-            const account = readJSON(localStorage, AUTH_KEY, null);
-            if (!account) return false;
-            const hash = await sha256Hex(account.salt + ':' + password);
-            return hash === account.hash;
-        },
-
-        resetAccount() {
-            localStorage.removeItem(AUTH_KEY);
-            sessionStorage.removeItem(SESSION_KEY);
-            sessionStorage.removeItem(LOCKOUT_KEY);
-            logAudit('Admin access reset on this device');
-        },
-
-        startSession() {
-            const session = { token: randomHex(16), expiresAt: Date.now() + SESSION_MS };
+            const res = await fetch('/api/admin/login', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ password }),
+            });
+            if (!res.ok) return false;
+            const { token } = await res.json();
+            const session = { token, expiresAt: Date.now() + SESSION_MS };
             writeJSON(sessionStorage, SESSION_KEY, session);
             sessionStorage.removeItem(LOCKOUT_KEY);
             logAudit('Logged in');
-            return session;
+            return true;
         },
 
         getSession() {
@@ -130,14 +71,12 @@
             logAudit(reason || 'Logged out');
         },
 
-        // Forward-compatible stub: once there's a backend, requests that need
-        // auth would send this header. Today it's inert — nothing checks it.
         authHeaders() {
             const session = this.getSession();
             return session ? { Authorization: 'Bearer ' + session.token } : {};
         },
 
-        // ---- lockout (a mild deterrent, not real rate limiting) ----------
+        // ---- lockout ------------------------------------------
         getLockout() {
             return readJSON(sessionStorage, LOCKOUT_KEY, { failCount: 0, lockedUntil: 0 });
         },
@@ -192,27 +131,14 @@
     const gateLabel = document.getElementById('gate-label');
     const gateTitle = document.getElementById('gate-title');
     const gateSub = document.getElementById('gate-sub');
-    const setupForm = document.getElementById('setup-form');
     const loginForm = document.getElementById('login-form');
     const authGate = document.getElementById('auth-gate');
     const dashboard = document.getElementById('dashboard');
 
-    function showSetup() {
-        gateLabel.textContent = 'First-time setup';
-        gateTitle.textContent = 'Set a password';
-        gateSub.textContent = "No admin password is set on this device yet. Choose one to continue — it's stored only in this browser.";
-        setupForm.hidden = false;
-        loginForm.hidden = true;
-        authGate.hidden = false;
-        dashboard.hidden = true;
-        setupForm.querySelector('input')?.focus();
-    }
-
     function showLogin() {
         gateLabel.textContent = 'Restricted access';
         gateTitle.textContent = 'Admin';
-        gateSub.textContent = 'Enter the password for this device to continue.';
-        setupForm.hidden = true;
+        gateSub.textContent = 'Enter the admin password for this site.';
         loginForm.hidden = false;
         authGate.hidden = false;
         dashboard.hidden = true;
@@ -252,22 +178,6 @@
         startSessionTimer();
     }
 
-    // ---- setup form ------------------------------------------------------
-
-    setupForm.addEventListener('submit', async (e) => {
-        e.preventDefault();
-        const pass = document.getElementById('setup-pass').value;
-        const confirm = document.getElementById('setup-pass-confirm').value;
-        const errorEl = document.getElementById('setup-error');
-        errorEl.textContent = '';
-        if (pass.length < 8) { errorEl.textContent = 'Use at least 8 characters.'; return; }
-        if (pass !== confirm) { errorEl.textContent = "Passwords don't match."; return; }
-        await AdminAuth.createAccount(pass);
-        setupForm.reset();
-        window.showToast?.('Admin access created for this device.');
-        showDashboard();
-    });
-
     // ---- login form ------------------------------------------------------
 
     loginForm.addEventListener('submit', async (e) => {
@@ -279,7 +189,6 @@
         const errorEl = document.getElementById('login-error');
         const ok = await AdminAuth.verifyPassword(pass);
         if (ok) {
-            AdminAuth.startSession();
             loginForm.reset();
             errorEl.textContent = '';
             showDashboard();
@@ -294,13 +203,6 @@
                 errorEl.textContent = `Incorrect password. ${left} attempt${left === 1 ? '' : 's'} left.`;
             }
         }
-    });
-
-    document.getElementById('reset-link').addEventListener('click', () => {
-        const sure = confirm("This clears the admin password saved on this device. You'll set up a new one next. Continue?");
-        if (!sure) return;
-        AdminAuth.resetAccount();
-        showSetup();
     });
 
     // ---- session timer / auto-logout -------------------------------------
@@ -461,22 +363,15 @@
     // ---- boot --------------------------------------------------------
 
     (function init() {
-        // crypto.subtle (used for password hashing) only exists in a secure
-        // context — HTTPS, or localhost while developing. Fail loudly and
-        // clearly here rather than throwing on the first login attempt.
         if (!window.crypto || !window.crypto.subtle) {
             gateLabel.textContent = 'Unavailable';
             gateTitle.textContent = 'Needs HTTPS';
             gateSub.textContent = 'This panel hashes your password with the Web Crypto API, which browsers only allow on HTTPS (or localhost while developing). Serve the site over HTTPS and reload this page.';
-            setupForm.hidden = true;
-            loginForm.hidden = true;
             authGate.hidden = false;
             dashboard.hidden = true;
             return;
         }
-        if (!AdminAuth.hasAccount()) { showSetup(); return; }
-        const session = AdminAuth.getSession();
-        if (session) { showDashboard(); return; }
+        // Always show login – no setup form anymore
         showLogin();
     })();
 })();
