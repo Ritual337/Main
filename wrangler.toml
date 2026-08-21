@@ -1,5 +1,4 @@
 name = "ritual"
 pages_build_output_dir = "."
 
-[compatibility_flags]
-nodejs_compat = true
+compatibility_flags = ["nodejs_compat"]
