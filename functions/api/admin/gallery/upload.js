@@ -32,16 +32,27 @@ export async function onRequest(context) {
   const base64 = Buffer.from(buffer).toString('base64');
   const dataURI = `data:${file.type};base64,${base64}`;
 
-  // 4. Upload to Cloudinary using fetch (not the SDK)
+  // 4. Prepare Cloudinary parameters
   const cloudName = env.CLOUDINARY_CLOUD_NAME;
   const apiKey = env.CLOUDINARY_API_KEY;
   const apiSecret = env.CLOUDINARY_API_SECRET;
 
   const timestamp = Math.floor(Date.now() / 1000);
   const publicId = `${Date.now()}_${file.name.split('.')[0]}`;
+  const folder = 'ritual_gallery';
 
-  // Generate signature
-  const signatureString = `public_id=${publicId}&timestamp=${timestamp}`;
+  // Build parameters object (exclude api_key and signature)
+  const params = {
+    folder: folder,
+    public_id: publicId,
+    timestamp: timestamp,
+  };
+
+  // Sort keys alphabetically and build signature string
+  const sortedKeys = Object.keys(params).sort();
+  const signatureString = sortedKeys.map(key => `${key}=${params[key]}`).join('&');
+
+  // Compute HMAC-SHA256 signature using Web Crypto API
   const encoder = new TextEncoder();
   const keyData = encoder.encode(apiSecret);
   const key = await crypto.subtle.importKey(
@@ -66,7 +77,7 @@ export async function onRequest(context) {
   cloudinaryForm.append('timestamp', timestamp);
   cloudinaryForm.append('signature', signature);
   cloudinaryForm.append('public_id', publicId);
-  cloudinaryForm.append('folder', 'ritual_gallery');
+  cloudinaryForm.append('folder', folder);
 
   try {
     const cloudinaryRes = await fetch(uploadUrl, {
