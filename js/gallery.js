@@ -1,29 +1,27 @@
 /**
- * Ritual — Gallery page logic.
- * Expects GALLERY_AUTH from gallery-auth.js to be loaded first.
+ * Ritual — Gallery page logic (public – no auth).
  */
 
 let lbImages = [];
 let lbIndex = 0;
 
 document.addEventListener('DOMContentLoaded', async () => {
-  if (!GALLERY_AUTH.requireAuth()) return;
-
   const state = document.getElementById('gallery-state');
   const grid = document.getElementById('gallery-grid');
 
   const showState = (text) => { state.textContent = text; state.hidden = false; grid.hidden = true; };
 
-  showState('Loading transmission…');
+  showState('Loading…');
 
   let images = [];
   try {
-    const res = await GALLERY_AUTH.authFetch('/gallery');
+    // No token – public fetch
+    const res = await fetch('/api/gallery');
     if (!res.ok) throw new Error(`API responded ${res.status}`);
     const data = await res.json();
     images = data.images || [];
   } catch (err) {
-    console.error('[gallery] backend error:', err);
+    console.error('[gallery] error:', err);
     images = [];
   }
 
