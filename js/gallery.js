@@ -3,15 +3,6 @@
  * Expects GALLERY_AUTH from gallery-auth.js to be loaded first.
  */
 
-// Shown only if GET /api/gallery isn't wired up yet, so the UI is reviewable
-// before the backend exists. Safe to delete once your API is live.
-const DEMO_IMAGES = Array.from({ length: 12 }, (_, i) => ({
-  id: i + 1,
-  src: `https://picsum.photos/seed/ritual-gal-${i + 1}/1400/${900 + (i % 3) * 150}`,
-  thumb: `https://picsum.photos/seed/ritual-gal-${i + 1}/600/${400 + (i % 3) * 80}`,
-  caption: `${String(i + 1).padStart(2, '0')} — untitled frame (demo)`,
-}));
-
 let lbImages = [];
 let lbIndex = 0;
 
@@ -32,8 +23,8 @@ document.addEventListener('DOMContentLoaded', async () => {
     const data = await res.json();
     images = data.images || [];
   } catch (err) {
-    console.warn('[gallery] backend unavailable, showing demo frames:', err.message);
-    images = DEMO_IMAGES;
+    console.error('[gallery] backend error:', err);
+    images = [];
   }
 
   if (!images.length) { showState('No frames yet.'); return; }
@@ -48,7 +39,7 @@ function renderGrid(images) {
   grid.innerHTML = images.map((img, i) => `
     <button class="gallery-card" data-index="${i}" type="button">
       <span class="gallery-num">${String(i + 1).padStart(2, '0')}</span>
-      <img src="${img.thumb || img.src}" alt="${img.caption || ''}" loading="lazy" />
+      <img src="${img.src}" alt="${img.caption || ''}" loading="lazy" />
       <span class="gallery-cap">${img.caption || ''}</span>
     </button>
   `).join('');
@@ -69,7 +60,7 @@ function openLightbox(images, index) {
 function showLightboxImage() {
   const img = lbImages[lbIndex];
   const el = document.getElementById('lightbox-img');
-  el.src = img.src || img.thumb;
+  el.src = img.src;
   el.alt = img.caption || '';
   document.getElementById('lightbox-caption').textContent = img.caption || '';
 }
