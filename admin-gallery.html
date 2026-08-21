@@ -76,6 +76,34 @@
   #upload-btn:hover{ background:var(--red-bright); }
   #upload-status{ font-family:var(--mono); font-size:.6rem; letter-spacing:.05em; color:var(--ink); min-height:1em; }
 
+  /* settings panel */
+  .settings-card{
+    background:var(--bg2); border:1px solid var(--line); padding:1.5rem;
+  }
+  .settings-card p{
+    font-family:var(--mono); font-size:.6rem; color:var(--ink); margin-bottom:.8rem;
+  }
+  .settings-row{
+    display:flex; gap:1rem; flex-wrap:wrap; align-items:center;
+  }
+  .settings-row label{
+    font-family:var(--mono); font-size:.55rem; letter-spacing:.1em; color:var(--ink); text-transform:uppercase;
+  }
+  .settings-row select{
+    background:var(--bg); border:1px solid var(--line-bright); color:var(--paper);
+    font-family:var(--mono); font-size:.75rem; padding:.4rem .8rem;
+  }
+  .settings-row select:focus{ outline:none; border-color:var(--red-bright); }
+  .settings-btn{
+    background:var(--red); border:none; color:var(--bg); font-family:var(--mono);
+    font-size:.58rem; letter-spacing:.1em; text-transform:uppercase; padding:.4rem 1.2rem; cursor:pointer;
+    transition:background .2s;
+  }
+  .settings-btn:hover{ background:var(--red-bright); }
+  .settings-status{
+    font-family:var(--mono); font-size:.55rem; color:var(--ink-dim); min-width:4rem;
+  }
+
   /* grid */
   .image-grid{ display:grid; grid-template-columns:repeat(auto-fill,minmax(200px,1fr)); gap:1px; background:var(--line); margin-top:3rem; }
   .image-item{ background:var(--bg2); padding:.6rem; display:flex; flex-direction:column; gap:.6rem; }
@@ -114,6 +142,28 @@
     <input type="text" id="caption-input" placeholder="Optional caption" />
     <button id="upload-btn" type="button">Upload</button>
     <p id="upload-status"></p>
+  </div>
+
+  <!-- Settings Panel -->
+  <div class="settings-area">
+    <div class="eyebrow" style="margin-top:3rem; margin-bottom:1rem;">
+      <span class="eyebrow-num">10</span>
+      <span class="eyebrow-text">Display Settings</span>
+      <span class="eyebrow-line"></span>
+    </div>
+    <div class="settings-card">
+      <p>Choose how images appear on the public gallery page.</p>
+      <div class="settings-row">
+        <label for="layout-select">Layout Mode</label>
+        <select id="layout-select">
+          <option value="grid">Uniform Grid (fill cells)</option>
+          <option value="masonry">Natural Masonry (original sizes)</option>
+          <option value="fixed">Fixed Height (uniform crop)</option>
+        </select>
+        <button class="settings-btn" id="save-layout-btn">Save</button>
+        <span class="settings-status" id="layout-status"></span>
+      </div>
+    </div>
   </div>
 
   <div class="eyebrow" style="margin-top:3.6rem;"><span class="eyebrow-num">09</span><span class="eyebrow-text">Published</span><span class="eyebrow-line"></span></div>

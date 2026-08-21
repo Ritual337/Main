@@ -44,6 +44,10 @@ function renderGrid(images) {
     </button>
   `).join('');
 
+  // Re-apply saved layout
+  const savedLayout = localStorage.getItem('ritual_gallery_layout') || 'grid';
+  grid.className = 'gallery-grid layout-' + savedLayout;
+
   grid.querySelectorAll('.gallery-card').forEach((card) => {
     card.addEventListener('click', () => openLightbox(images, Number(card.dataset.index)));
   });
