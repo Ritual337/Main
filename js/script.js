@@ -190,7 +190,7 @@
 (function heroTypewriter() {
     const el = document.getElementById('hero-subtitle');
     if (!el) return;
-    const full = "a personal archive with no feed and no followers.\njust things logged, kept, and occasionally shared.";
+    const full = "The beginning of a new era. Embrace her reign.";
     let idx = 0;
     let html = '';
     if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) {
@@ -226,11 +226,11 @@
 
 (function signalTicker() {
     const quotes = [
-        'the night remembers what the day forgets',
-        'every ritual begins with a single breath',
-        'in the space between words, meaning lingers',
-        'what we build in the dark stands in the light',
-        'silence is not empty — it is full of answers',
+        '"Religion creates division; love creates unity"',
+        '"Every ritual begins with a single breath."',
+        '"Is life the moment we cherish? Or the moment we are cherished?"',
+        '"We never understand the value of something until we lose it forever"',
+        '"Silence is not empty — it is full of answers"',
     ];
     const textEl = document.getElementById('whisper-text');
     const dots = document.querySelectorAll('.whisper-dot');
@@ -248,10 +248,10 @@
     dots.forEach(d => d.addEventListener('click', () => {
         clearInterval(interval);
         show(parseInt(d.dataset.index));
-        interval = setInterval(next, 5000);
+        interval = setInterval(next, 4000);
     }));
     function next() { show((current + 1) % quotes.length); }
-    interval = setInterval(next, 5000);
+    interval = setInterval(next, 4000);
 })();
 
 (function notesSection() {
