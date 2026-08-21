@@ -1,0 +1,79 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Access — Ritual</title>
+<meta name="robots" content="noindex, nofollow" />
+<meta name="theme-color" content="#0b0a09" />
+<meta name="color-scheme" content="dark" />
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=IBM+Plex+Mono:ital,wght@0,400;0,500;0,600;0,700&family=Source+Serif+4:ital,wght@0,400;0,600;1,400&display=swap" rel="stylesheet" />
+<style>
+  :root {
+    --bg:#0b0a09; --bg2:#121110; --paper:#efe8d9; --paper-dim:#c9c0ac; --ink:#8c8478;
+    --red:#d81f2f; --red-bright:#ff3346; --red-glow:rgba(216,31,47,.30); --line:#2a2521; --line-bright:#3c352d;
+    --mono:'IBM Plex Mono',monospace; --serif:'Source Serif 4',Georgia,serif; --display:'Bebas Neue','IBM Plex Mono',sans-serif;
+  }
+  *,*::before,*::after{margin:0;padding:0;box-sizing:border-box;}
+  body{
+    background:var(--bg); color:var(--paper-dim); font-family:var(--serif); min-height:100vh;
+    display:flex; align-items:center; justify-content:center; padding:2rem;
+    background-image: radial-gradient(ellipse at 50% 30%, rgba(216,31,47,.06), transparent 60%);
+  }
+  .login-card{
+    width:100%; max-width:380px; background:var(--bg2); border:1px solid var(--line);
+    padding:2.6rem 2.2rem; text-align:center; position:relative;
+  }
+  .login-mark{
+    width:44px; height:44px; margin:0 auto 1.4rem; display:flex; align-items:center; justify-content:center;
+    background:var(--red); color:var(--bg); font-family:var(--display); font-size:1.7rem; border-radius:2px;
+    box-shadow:0 0 20px var(--red-glow);
+  }
+  .login-title{ font-family:var(--display); font-size:1.8rem; letter-spacing:.06em; color:var(--paper); text-transform:uppercase; }
+  .login-title em{ color:var(--red-bright); font-style:normal; }
+  .login-sub{ font-family:var(--mono); font-size:.64rem; color:var(--ink); letter-spacing:.04em; line-height:1.8; margin:1rem 0 2rem; }
+  .login-form{ display:flex; flex-direction:column; gap:.9rem; text-align:left; }
+  .login-label{ font-family:var(--mono); font-size:.56rem; letter-spacing:.18em; text-transform:uppercase; color:var(--ink); }
+  .login-input{
+    background:var(--bg); border:1px solid var(--line-bright); color:var(--paper); font-family:var(--mono);
+    font-size:.85rem; padding:.75rem .8rem; letter-spacing:.05em; transition:border-color .2s;
+  }
+  .login-input:focus{ outline:none; border-color:var(--red-bright); }
+  .login-submit{
+    margin-top:.4rem; background:var(--red); color:var(--bg); border:none; font-family:var(--mono);
+    font-size:.66rem; letter-spacing:.16em; text-transform:uppercase; padding:.85rem; cursor:pointer;
+    transition:background .2s, opacity .2s;
+  }
+  .login-submit:hover{ background:var(--red-bright); }
+  .login-submit:disabled{ opacity:.55; cursor:wait; }
+  .login-error{
+    font-family:var(--mono); font-size:.6rem; letter-spacing:.04em; color:var(--red-bright);
+    background:rgba(216,31,47,.08); border:1px solid rgba(216,31,47,.35); padding:.6rem .7rem;
+  }
+  .login-back{
+    display:inline-block; margin-top:1.8rem; font-family:var(--mono); font-size:.58rem; letter-spacing:.1em;
+    color:var(--ink); text-decoration:none; text-transform:uppercase;
+  }
+  .login-back:hover{ color:var(--red-bright); }
+</style>
+</head>
+<body>
+  <div class="login-card">
+    <div class="login-mark">R</div>
+    <h1 class="login-title">Ritu<em>al</em></h1>
+    <p class="login-sub">This archive is private.<br />Enter the password to continue.</p>
+    <form id="login-form" class="login-form" autocomplete="off">
+      <div>
+        <label class="login-label" for="password">Password</label>
+        <input class="login-input" type="password" id="password" name="password" required autocomplete="current-password" style="margin-top:.4rem; width:100%;" />
+      </div>
+      <button type="submit" class="login-submit" id="login-submit"><span>Enter</span></button>
+      <p class="login-error" id="login-error" role="alert" hidden></p>
+    </form>
+    <a href="index.html" class="login-back">← Back to site</a>
+  </div>
+  <script src="js/gallery-auth.js" defer></script>
+</body>
+</html>
