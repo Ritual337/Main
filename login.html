@@ -7,73 +7,126 @@
 <meta name="robots" content="noindex, nofollow" />
 <meta name="theme-color" content="#0b0a09" />
 <meta name="color-scheme" content="dark" />
+<link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><rect width=%22100%22 height=%22100%22 rx=%2218%22 fill=%22%230b0a09%22/><text x=%2250%22 y=%2270%22 font-family=%22Georgia, serif%22 font-size=%2262%22 fill=%22%23d81f2f%22 text-anchor=%22middle%22>R</text></svg>" />
 <link rel="preconnect" href="https://fonts.googleapis.com" />
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
 <link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=IBM+Plex+Mono:ital,wght@0,400;0,500;0,600;0,700&family=Source+Serif+4:ital,wght@0,400;0,600;1,400&display=swap" rel="stylesheet" />
 <style>
   :root {
-    --bg:#0b0a09; --bg2:#121110; --paper:#efe8d9; --paper-dim:#c9c0ac; --ink:#8c8478;
-    --red:#d81f2f; --red-bright:#ff3346; --red-glow:rgba(216,31,47,.30); --line:#2a2521; --line-bright:#3c352d;
+    --bg:#0b0a09; --bg2:#121110; --bg3:#17140f; --paper:#efe8d9; --paper-dim:#c9c0ac;
+    --ink:#8c8478; --ink-dim:#5c564c;
+    --red:#d81f2f; --red-bright:#ff3346; --red-deep:#6e0f17;
+    --red-glow:rgba(216,31,47,.30); --red-glow-strong:rgba(255,51,70,0.55);
+    --line:#2a2521; --line-bright:#3c352d;
     --mono:'IBM Plex Mono',monospace; --serif:'Source Serif 4',Georgia,serif; --display:'Bebas Neue','IBM Plex Mono',sans-serif;
   }
   *,*::before,*::after{margin:0;padding:0;box-sizing:border-box;}
   body{
     background:var(--bg); color:var(--paper-dim); font-family:var(--serif); min-height:100vh;
     display:flex; align-items:center; justify-content:center; padding:2rem;
-    background-image: radial-gradient(ellipse at 50% 30%, rgba(216,31,47,.06), transparent 60%);
   }
-  .login-card{
-    width:100%; max-width:380px; background:var(--bg2); border:1px solid var(--line);
-    padding:2.6rem 2.2rem; text-align:center; position:relative;
+
+  .gate-card{
+    width:100%; max-width:400px; background:var(--bg2); border:1px solid var(--line); border-top:2px solid var(--red);
+    padding:2.4rem 2.2rem; position:relative; overflow:hidden;
   }
-  .login-mark{
-    width:44px; height:44px; margin:0 auto 1.4rem; display:flex; align-items:center; justify-content:center;
-    background:var(--red); color:var(--bg); font-family:var(--display); font-size:1.7rem; border-radius:2px;
-    box-shadow:0 0 20px var(--red-glow);
+  .gate-scanlines{
+    position:absolute; inset:0; pointer-events:none; z-index:0;
+    background:repeating-linear-gradient(0deg, transparent, transparent 3px, rgba(216,31,47,.02) 3px, rgba(216,31,47,.02) 6px);
   }
-  .login-title{ font-family:var(--display); font-size:1.8rem; letter-spacing:.06em; color:var(--paper); text-transform:uppercase; }
-  .login-title em{ color:var(--red-bright); font-style:normal; }
-  .login-sub{ font-family:var(--mono); font-size:.64rem; color:var(--ink); letter-spacing:.04em; line-height:1.8; margin:1rem 0 2rem; }
-  .login-form{ display:flex; flex-direction:column; gap:.9rem; text-align:left; }
-  .login-label{ font-family:var(--mono); font-size:.56rem; letter-spacing:.18em; text-transform:uppercase; color:var(--ink); }
-  .login-input{
-    background:var(--bg); border:1px solid var(--line-bright); color:var(--paper); font-family:var(--mono);
-    font-size:.85rem; padding:.75rem .8rem; letter-spacing:.05em; transition:border-color .2s;
+  .gate-card > * { position:relative; z-index:1; }
+  .gate-icon{
+    width:42px; height:42px; display:flex; align-items:center; justify-content:center;
+    border:1px solid var(--line-bright); border-radius:50%; color:var(--red-bright);
+    font-size:1rem; margin-bottom:1.2rem;
   }
-  .login-input:focus{ outline:none; border-color:var(--red-bright); }
-  .login-submit{
-    margin-top:.4rem; background:var(--red); color:var(--bg); border:none; font-family:var(--mono);
-    font-size:.66rem; letter-spacing:.16em; text-transform:uppercase; padding:.85rem; cursor:pointer;
-    transition:background .2s, opacity .2s;
+  .gate-label{
+    font-family:var(--mono); font-size:.55rem; letter-spacing:.25em; text-transform:uppercase;
+    color:var(--red-bright); margin-bottom:.5rem;
   }
-  .login-submit:hover{ background:var(--red-bright); }
-  .login-submit:disabled{ opacity:.55; cursor:wait; }
-  .login-error{
-    font-family:var(--mono); font-size:.6rem; letter-spacing:.04em; color:var(--red-bright);
-    background:rgba(216,31,47,.08); border:1px solid rgba(216,31,47,.35); padding:.6rem .7rem;
+  .gate-title{
+    font-family:var(--display); font-size:2.2rem; letter-spacing:.02em; text-transform:uppercase;
+    color:var(--paper); line-height:1; margin-bottom:.6rem;
   }
-  .login-back{
-    display:inline-block; margin-top:1.8rem; font-family:var(--mono); font-size:.58rem; letter-spacing:.1em;
-    color:var(--ink); text-decoration:none; text-transform:uppercase;
+  .gate-title em{ color:var(--red-bright); font-style:normal; }
+  .gate-sub{
+    font-family:var(--mono); font-size:.62rem; color:var(--ink); letter-spacing:.04em; line-height:1.6; margin-bottom:1.6rem;
   }
-  .login-back:hover{ color:var(--red-bright); }
+  .gate-form{ display:flex; flex-direction:column; gap:1rem; }
+  .gate-field-label{
+    font-family:var(--mono); font-size:.5rem; letter-spacing:.12em; text-transform:uppercase; color:var(--ink);
+  }
+  .pass-row{
+    display:flex; border:1px solid var(--line); border-bottom:1px solid var(--line-bright);
+  }
+  .pass-row input{
+    flex:1; background:var(--bg); border:none; color:var(--paper); font-family:var(--mono);
+    font-size:.9rem; padding:.65rem .75rem; outline:none; letter-spacing:.05em;
+  }
+  .pass-row:focus-within{ border-color:var(--red-bright); }
+  .pass-toggle{
+    background:var(--bg); border:none; border-left:1px solid var(--line); color:var(--ink);
+    width:2.6rem; cursor:pointer; transition:color .2s;
+  }
+  .pass-toggle:hover{ color:var(--red-bright); }
+  .gate-error{
+    font-family:var(--mono); font-size:.55rem; color:var(--red-bright); letter-spacing:.04em; line-height:1.6; min-height:1em;
+  }
+  .gate-submit{
+    background:none; border:1px solid var(--red-bright); color:var(--red-bright); font-family:var(--mono);
+    font-size:.58rem; letter-spacing:.2em; text-transform:uppercase; padding:.75rem 1rem; cursor:pointer; transition:all .2s;
+  }
+  .gate-submit:hover{ background:var(--red-bright); color:var(--bg); box-shadow:0 0 28px var(--red-glow-strong); }
+  .gate-submit:disabled{ opacity:.45; cursor:not-allowed; box-shadow:none; background:none; color:var(--red-bright); }
+  .gate-note{
+    display:flex; gap:.55rem; align-items:flex-start; font-family:var(--mono); font-size:.5rem;
+    color:var(--ink-dim); letter-spacing:.02em; line-height:1.7; margin-top:1.8rem; padding-top:1.4rem;
+    border-top:1px solid var(--line);
+  }
+  .gate-note i{ color:var(--red-bright); margin-top:.15rem; flex:none; }
+  .gate-back{
+    display:inline-block; margin-top:1.2rem; font-family:var(--mono); font-size:.58rem; letter-spacing:.1em;
+    color:var(--ink); text-decoration:none; text-transform:uppercase; transition:color .2s;
+  }
+  .gate-back:hover{ color:var(--red-bright); }
 </style>
 </head>
 <body>
-  <div class="login-card">
-    <div class="login-mark">R</div>
-    <h1 class="login-title">Ritu<em>al</em></h1>
-    <p class="login-sub">This archive is private.<br />Enter the password to continue.</p>
-    <form id="login-form" class="login-form" autocomplete="off">
+  <div class="gate-card">
+    <div class="gate-scanlines"></div>
+    <div class="gate-icon"><i class="fas fa-lock"></i></div>
+    <div class="gate-label">Restricted access</div>
+    <h1 class="gate-title">Ritu<em>al</em></h1>
+    <p class="gate-sub">This archive is private.<br />Enter the password to continue.</p>
+    <form id="login-form" class="gate-form" autocomplete="off">
       <div>
-        <label class="login-label" for="password">Password</label>
-        <input class="login-input" type="password" id="password" name="password" required autocomplete="current-password" style="margin-top:.4rem; width:100%;" />
+        <label class="gate-field-label" for="password">Password</label>
+        <div class="pass-row" style="margin-top:.4rem;">
+          <input type="password" id="password" name="password" required autocomplete="current-password" />
+          <button type="button" class="pass-toggle" id="pass-toggle" aria-label="Show password"><i class="fas fa-eye"></i></button>
+        </div>
       </div>
-      <button type="submit" class="login-submit" id="login-submit"><span>Enter</span></button>
-      <p class="login-error" id="login-error" role="alert" hidden></p>
+      <div class="gate-error" id="login-error" role="alert"></div>
+      <button type="submit" class="gate-submit" id="login-submit"><span>Enter</span></button>
     </form>
-    <a href="index.html" class="login-back">← Back to site</a>
+    <a href="index.html" class="gate-back">← Back to site</a>
+    <p class="gate-note"><i class="fas fa-triangle-exclamation"></i> <span>Password is stored securely on Ritual server.</span></p>
   </div>
+
+  <!-- Font Awesome for the lock icon -->
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css" />
   <script src="js/gallery-auth.js" defer></script>
+  <script>
+    // Simple password toggle
+    document.addEventListener('DOMContentLoaded', () => {
+      const toggle = document.getElementById('pass-toggle');
+      const input = document.getElementById('password');
+      toggle.addEventListener('click', () => {
+        const showing = input.type === 'text';
+        input.type = showing ? 'password' : 'text';
+        toggle.innerHTML = showing ? '<i class="fas fa-eye"></i>' : '<i class="fas fa-eye-slash"></i>';
+      });
+    });
+  </script>
 </body>
 </html>

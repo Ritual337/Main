@@ -1,5 +1,5 @@
 /*
- * admin.js — auth gate + dashboard behavior for admin.html.
+ * admin.js — auth gate + dashboard behavior for admin-guestbook.html.
  * Uses Cloudflare Pages Functions as the backend (D1 + JWT auth).
  */
 (function () {
