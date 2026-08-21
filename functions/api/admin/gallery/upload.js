@@ -1,5 +1,4 @@
 import { verifyJWT } from '../../_jwt.js';
-import cloudinary from 'cloudinary';
 
 export async function onRequest(context) {
   const { request, env } = context;
@@ -8,6 +7,7 @@ export async function onRequest(context) {
     return new Response('Method not allowed', { status: 405 });
   }
 
+  // 1. Verify JWT token
   const authHeader = request.headers.get('Authorization');
   if (!authHeader || !authHeader.startsWith('Bearer ')) {
     return new Response(JSON.stringify({ error: 'Unauthorized' }), { status: 401 });
@@ -18,6 +18,7 @@ export async function onRequest(context) {
     return new Response(JSON.stringify({ error: 'Unauthorized' }), { status: 401 });
   }
 
+  // 2. Parse form data
   const formData = await request.formData();
   const file = formData.get('file');
   const caption = formData.get('caption') || '';
@@ -26,25 +27,61 @@ export async function onRequest(context) {
     return new Response(JSON.stringify({ error: 'No file provided' }), { status: 400 });
   }
 
-  const v2 = cloudinary.v2;
-  v2.config({
-    cloud_name: env.CLOUDINARY_CLOUD_NAME,
-    api_key: env.CLOUDINARY_API_KEY,
-    api_secret: env.CLOUDINARY_API_SECRET,
-  });
-
+  // 3. Convert file to base64
   const buffer = await file.arrayBuffer();
   const base64 = Buffer.from(buffer).toString('base64');
   const dataURI = `data:${file.type};base64,${base64}`;
 
+  // 4. Upload to Cloudinary using fetch (not the SDK)
+  const cloudName = env.CLOUDINARY_CLOUD_NAME;
+  const apiKey = env.CLOUDINARY_API_KEY;
+  const apiSecret = env.CLOUDINARY_API_SECRET;
+
+  const timestamp = Math.floor(Date.now() / 1000);
+  const publicId = `${Date.now()}_${file.name.split('.')[0]}`;
+
+  // Generate signature
+  const signatureString = `public_id=${publicId}&timestamp=${timestamp}`;
+  const encoder = new TextEncoder();
+  const keyData = encoder.encode(apiSecret);
+  const key = await crypto.subtle.importKey(
+    'raw',
+    keyData,
+    { name: 'HMAC', hash: 'SHA-256' },
+    false,
+    ['sign']
+  );
+  const signatureBuffer = await crypto.subtle.sign('HMAC', key, encoder.encode(signatureString));
+  const signature = Array.from(new Uint8Array(signatureBuffer))
+    .map(b => b.toString(16).padStart(2, '0'))
+    .join('');
+
+  // Build Cloudinary upload URL
+  const uploadUrl = `https://api.cloudinary.com/v1_1/${cloudName}/image/upload`;
+
+  // Prepare form data for Cloudinary
+  const cloudinaryForm = new FormData();
+  cloudinaryForm.append('file', dataURI);
+  cloudinaryForm.append('api_key', apiKey);
+  cloudinaryForm.append('timestamp', timestamp);
+  cloudinaryForm.append('signature', signature);
+  cloudinaryForm.append('public_id', publicId);
+  cloudinaryForm.append('folder', 'ritual_gallery');
+
   try {
-    const result = await v2.uploader.upload(dataURI, {
-      folder: 'ritual_gallery',
-      public_id: `${Date.now()}_${file.name.split('.')[0]}`,
+    const cloudinaryRes = await fetch(uploadUrl, {
+      method: 'POST',
+      body: cloudinaryForm,
     });
 
-    const publicId = result.public_id;
-    const filename = publicId + '.' + result.format;
+    const result = await cloudinaryRes.json();
+
+    if (!cloudinaryRes.ok) {
+      throw new Error(result.error?.message || 'Cloudinary upload failed');
+    }
+
+    // 5. Save to D1
+    const filename = result.public_id + '.' + result.format;
     const id = 'img_' + Date.now().toString(36) + '_' + Math.random().toString(36).slice(2, 6);
     const uploaded_at = Date.now();
 
@@ -57,6 +94,9 @@ export async function onRequest(context) {
       headers: { 'Content-Type': 'application/json' },
     });
   } catch (err) {
-    return new Response(JSON.stringify({ error: err.message }), { status: 500 });
+    return new Response(JSON.stringify({ error: err.message }), {
+      status: 500,
+      headers: { 'Content-Type': 'application/json' },
+    });
   }
 }
