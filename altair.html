@@ -1,0 +1,394 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<title>Altair</title>
+<style>
+  :root{
+    --void: #020203;
+    --core-white: #fff6da;
+    --equator-gold: #ffe6a0;
+    --pole-blue: #dce8ff;
+    --ink-soft: #93a2c4;
+    --ink-faint: #454f6e;
+  }
+
+  html, body{
+    margin:0; padding:0;
+    width:100%; height:100%;
+    background: var(--void);
+    overflow: hidden;
+    -webkit-user-select: none;
+    user-select: none;
+  }
+
+  canvas{
+    display:block;
+    touch-action: none;
+    cursor: grab;
+  }
+  canvas.grabbing{ cursor: grabbing; }
+
+  #overlay{
+    position: fixed;
+    inset: 0;
+    pointer-events: none;
+    font-family: -apple-system, "Helvetica Neue", Helvetica, Arial, sans-serif;
+    color: var(--pole-blue);
+  }
+
+  .mono{
+    font-family: ui-monospace, "SF Mono", "JetBrains Mono", Consolas, monospace;
+  }
+
+  #title{
+    position:absolute;
+    top: 7vh;
+    left:50%;
+    transform: translateX(-50%);
+    text-align:center;
+  }
+  #title h1{
+    margin:0;
+    font-weight:200;
+    font-size: clamp(1.7rem, 5vw, 2.6rem);
+    letter-spacing: 0.55em;
+    text-indent: 0.55em; /* re-center the extra trailing tracking */
+    text-transform: uppercase;
+    color: var(--core-white);
+    text-shadow: 0 0 24px rgba(200,215,255,0.55), 0 0 60px rgba(160,185,255,0.25);
+  }
+  #title p{
+    margin: 0.9rem 0 0;
+    font-size: 0.72rem;
+    letter-spacing: 0.14em;
+    color: var(--ink-soft);
+  }
+  #title .caveat{
+    margin-top: 0.35rem;
+    font-size: 0.62rem;
+    letter-spacing: 0.08em;
+    color: var(--ink-faint);
+  }
+
+  #readout{
+    position:absolute;
+    left: 4vw;
+    bottom: 4vh;
+    font-size: 0.68rem;
+    letter-spacing: 0.08em;
+    color: var(--ink-soft);
+    line-height: 1.7;
+  }
+  #readout .label{ color: var(--ink-faint); margin-right: 0.6em; }
+
+  #hints{
+    position:absolute;
+    right: 4vw;
+    bottom: 4vh;
+    text-align:right;
+    font-size: 0.68rem;
+    letter-spacing: 0.08em;
+    color: var(--ink-faint);
+    line-height: 1.7;
+  }
+
+  .reticle{
+    position:absolute;
+    width: 26px; height: 26px;
+    border-color: var(--ink-faint);
+    opacity: 0.55;
+  }
+  #ret-tl{ top: 22px; left: 22px; border-top:1px solid; border-left:1px solid; }
+  #ret-tr{ top: 22px; right: 22px; border-top:1px solid; border-right:1px solid; }
+  #ret-bl{ bottom: 22px; left: 22px; border-bottom:1px solid; border-left:1px solid; }
+  #ret-br{ bottom: 22px; right: 22px; border-bottom:1px solid; border-right:1px solid; }
+
+  #cross{
+    position:absolute; top:50%; left:50%;
+    width:15px; height:15px;
+    transform: translate(-50%,-50%);
+    opacity:0.28;
+  }
+  #cross::before, #cross::after{
+    content:"";
+    position:absolute;
+    background: var(--ink-soft);
+  }
+  #cross::before{ top:50%; left:0; width:100%; height:1px; transform: translateY(-50%); }
+  #cross::after{ left:50%; top:0; width:1px; height:100%; transform: translateX(-50%); }
+</style>
+</head>
+<body>
+
+<div id="overlay">
+  <div id="title">
+    <h1>Altair</h1>
+    <p class="mono">&alpha; Aquilae &middot; 16.7 ly &middot; A7&nbsp;V &middot; ~7,700&nbsp;K</p>
+  </div>
+
+  <div id="readout" class="mono">
+    <div><span class="label">ROT</span><span id="rot-val">0.0&deg;</span></div>
+    <div><span class="label">OBL</span><span>0.87</span></div>
+  </div>
+
+  <div id="hints" class="mono">
+    <div>[ drag ] &nbsp;orbit</div>
+    <div>[ scroll ] &nbsp;zoom</div>
+  </div>
+
+  <div class="reticle" id="ret-tl"></div>
+  <div class="reticle" id="ret-tr"></div>
+  <div class="reticle" id="ret-bl"></div>
+  <div class="reticle" id="ret-br"></div>
+  <div id="cross"></div>
+</div>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+<script>
+(function(){
+  "use strict";
+
+  var reducedMotion = window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+
+  var STAR_RADIUS = 5;
+  var OBLATENESS  = 0.87;
+  var SPIN_SPEED  = reducedMotion ? 0.05 : 0.35; // rad/sec, artistic (not real-time) scale
+
+  var scene, camera, renderer, clock;
+  var starMesh, glowSprite, fieldGroup;
+  var rotEl = document.getElementById('rot-val');
+
+  // --- camera orbit state (manual, no addons needed) ---
+  var radius = 20, minRadius = 9, maxRadius = 46;
+  var theta = Math.PI / 2.4;
+  var phi   = Math.PI / 2.3;
+  var targetTheta = theta, targetPhi = phi;
+  var isDragging = false, prevX = 0, prevY = 0;
+  var autoDrift = !reducedMotion;
+  var resumeTimer = null;
+
+  init();
+  animate();
+
+  function init(){
+    scene = new THREE.Scene();
+
+    camera = new THREE.PerspectiveCamera(50, window.innerWidth / window.innerHeight, 0.1, 1000);
+
+    renderer = new THREE.WebGLRenderer({ antialias: true });
+    renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, 2));
+    renderer.setSize(window.innerWidth, window.innerHeight);
+    document.body.appendChild(renderer.domElement);
+
+    clock = new THREE.Clock();
+
+    scene.add(new THREE.AmbientLight(0x334066, 1.0));
+    var light = new THREE.PointLight(0xfff4e0, 1.1);
+    light.position.set(0, 0, 0);
+    scene.add(light);
+
+    fieldGroup = new THREE.Group();
+    scene.add(fieldGroup);
+    fieldGroup.add(makeStarfield(1800, 300, 0.7));
+    fieldGroup.add(makeStarfield(600, 170, 1.3));
+
+    var geo = new THREE.SphereGeometry(STAR_RADIUS, 80, 60);
+    var tex = generateStarTexture();
+    var mat = new THREE.MeshStandardMaterial({
+      map: tex,
+      emissive: new THREE.Color(0xfff6d8),
+      emissiveMap: tex,
+      emissiveIntensity: 1.35,
+      roughness: 0.65,
+      metalness: 0.0
+    });
+    starMesh = new THREE.Mesh(geo, mat);
+    starMesh.scale.set(1, OBLATENESS, 1); // fast rotators bulge at the equator
+    scene.add(starMesh);
+
+    var glowTex = generateGlowTexture();
+    var glowMat = new THREE.SpriteMaterial({
+      map: glowTex,
+      color: 0xffffff,
+      transparent: true,
+      blending: THREE.AdditiveBlending,
+      depthWrite: false
+    });
+    glowSprite = new THREE.Sprite(glowMat);
+    glowSprite.scale.set(17, 17, 1);
+    scene.add(glowSprite);
+
+    updateCameraPosition();
+    window.addEventListener('resize', onResize);
+    addPointerControls();
+  }
+
+  function makeStarfield(count, spread, size){
+    var positions = new Float32Array(count * 3);
+    for (var i = 0; i < count; i++){
+      var r = spread * (0.6 + Math.random() * 0.4);
+      var t = Math.random() * Math.PI * 2;
+      var p = Math.acos(2 * Math.random() - 1);
+      positions[i * 3]     = r * Math.sin(p) * Math.cos(t);
+      positions[i * 3 + 1] = r * Math.sin(p) * Math.sin(t);
+      positions[i * 3 + 2] = r * Math.cos(p);
+    }
+    var geo = new THREE.BufferGeometry();
+    geo.setAttribute('position', new THREE.BufferAttribute(positions, 3));
+    var mat = new THREE.PointsMaterial({
+      color: 0xffffff, size: size, sizeAttenuation: true,
+      transparent: true, opacity: 0.8
+    });
+    return new THREE.Points(geo, mat);
+  }
+
+  // Latitude-banded texture: hotter/bluer poles, cooler/golder equator —
+  // a nod to Altair's real gravity-darkening, plus mottled turbulence.
+  function generateStarTexture(){
+    var w = 1024, h = 512;
+    var canvas = document.createElement('canvas');
+    canvas.width = w; canvas.height = h;
+    var ctx = canvas.getContext('2d');
+
+    var grad = ctx.createLinearGradient(0, 0, 0, h);
+    grad.addColorStop(0.00, '#eaf2ff');
+    grad.addColorStop(0.14, '#fdf7e6');
+    grad.addColorStop(0.50, '#fff0bf');
+    grad.addColorStop(0.86, '#fdf7e6');
+    grad.addColorStop(1.00, '#eaf2ff');
+    ctx.fillStyle = grad;
+    ctx.fillRect(0, 0, w, h);
+
+    for (var i = 0; i < 5000; i++){
+      var x = Math.random() * w;
+      var y = Math.random() * h;
+      var rr = Math.random() * 2.2 + 0.4;
+      var a = Math.random() * 0.12;
+      ctx.beginPath();
+      ctx.fillStyle = 'rgba(255,255,255,' + a + ')';
+      ctx.arc(x, y, rr, 0, Math.PI * 2);
+      ctx.fill();
+    }
+
+    for (var j = 0; j < 160; j++){
+      var sy = Math.random() * h;
+      var sx = Math.random() * w;
+      var len = 20 + Math.random() * 80;
+      var sa = Math.random() * 0.08;
+      ctx.strokeStyle = 'rgba(255,240,210,' + sa + ')';
+      ctx.lineWidth = 1 + Math.random() * 1.5;
+      ctx.beginPath();
+      ctx.moveTo(sx, sy);
+      ctx.lineTo(sx + len, sy + (Math.random() - 0.5) * 6);
+      ctx.stroke();
+    }
+
+    var texture = new THREE.CanvasTexture(canvas);
+    texture.wrapS = THREE.RepeatWrapping;
+    texture.wrapT = THREE.ClampToEdgeWrapping;
+    return texture;
+  }
+
+  function generateGlowTexture(){
+    var size = 256;
+    var canvas = document.createElement('canvas');
+    canvas.width = size; canvas.height = size;
+    var ctx = canvas.getContext('2d');
+    var grad = ctx.createRadialGradient(size/2, size/2, 0, size/2, size/2, size/2);
+    grad.addColorStop(0,    'rgba(255,255,255,1)');
+    grad.addColorStop(0.18, 'rgba(255,248,225,0.85)');
+    grad.addColorStop(0.45, 'rgba(255,220,150,0.28)');
+    grad.addColorStop(1,    'rgba(255,200,100,0)');
+    ctx.fillStyle = grad;
+    ctx.fillRect(0, 0, size, size);
+    return new THREE.CanvasTexture(canvas);
+  }
+
+  function updateCameraPosition(){
+    camera.position.x = radius * Math.sin(phi) * Math.cos(theta);
+    camera.position.y = radius * Math.cos(phi);
+    camera.position.z = radius * Math.sin(phi) * Math.sin(theta);
+    camera.lookAt(0, 0, 0);
+  }
+
+  function addPointerControls(){
+    var dom = renderer.domElement;
+
+    function down(x, y){
+      isDragging = true; prevX = x; prevY = y;
+      autoDrift = false;
+      clearTimeout(resumeTimer);
+      dom.classList.add('grabbing');
+    }
+    function move(x, y){
+      if (!isDragging) return;
+      var dx = x - prevX, dy = y - prevY;
+      targetTheta -= dx * 0.005;
+      targetPhi   -= dy * 0.005;
+      targetPhi = Math.max(0.4, Math.min(Math.PI - 0.4, targetPhi));
+      prevX = x; prevY = y;
+    }
+    function up(){
+      isDragging = false;
+      dom.classList.remove('grabbing');
+      if (!reducedMotion){
+        resumeTimer = setTimeout(function(){ autoDrift = true; }, 2500);
+      }
+    }
+
+    dom.addEventListener('mousedown', function(e){ e.preventDefault(); down(e.clientX, e.clientY); });
+    window.addEventListener('mousemove', function(e){ move(e.clientX, e.clientY); });
+    window.addEventListener('mouseup', up);
+
+    dom.addEventListener('touchstart', function(e){ var t = e.touches[0]; down(t.clientX, t.clientY); }, { passive: true });
+    dom.addEventListener('touchmove', function(e){ var t = e.touches[0]; move(t.clientX, t.clientY); }, { passive: true });
+    dom.addEventListener('touchend', up);
+
+    dom.addEventListener('wheel', function(e){
+      radius += e.deltaY * 0.01;
+      radius = Math.max(minRadius, Math.min(maxRadius, radius));
+    }, { passive: true });
+  }
+
+  function onResize(){
+    camera.aspect = window.innerWidth / window.innerHeight;
+    camera.updateProjectionMatrix();
+    renderer.setSize(window.innerWidth, window.innerHeight);
+  }
+
+  var frame = 0;
+
+  function animate(){
+    requestAnimationFrame(animate);
+    var dt = Math.min(clock.getDelta(), 0.05);
+    var elapsed = clock.elapsedTime;
+
+    starMesh.rotation.y += dt * SPIN_SPEED;
+
+    var pulse = 1 + Math.sin(elapsed * 1.2) * 0.04;
+    glowSprite.scale.set(17 * pulse, 17 * pulse, 1);
+
+    if (!reducedMotion){
+      fieldGroup.rotation.y += dt * 0.004;
+      if (autoDrift) targetTheta += dt * 0.03;
+    }
+
+    theta += (targetTheta - theta) * 0.06;
+    phi   += (targetPhi   - phi)   * 0.06;
+    updateCameraPosition();
+
+    frame++;
+    if (frame % 3 === 0){
+      var deg = THREE.MathUtils ? THREE.MathUtils.radToDeg(starMesh.rotation.y) : starMesh.rotation.y * 180 / Math.PI;
+      deg = ((deg % 360) + 360) % 360;
+      rotEl.textContent = deg.toFixed(1) + '\u00B0';
+    }
+
+    renderer.render(scene, camera);
+  }
+})();
+</script>
+</body>
+</html>
