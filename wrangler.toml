@@ -1,0 +1,17 @@
+name = "ritual"
+pages_build_output_dir = "."
+
+compatibility_date = "2024-09-23"
+compatibility_flags = ["nodejs_compat"]
+
+# Guestbook database
+[[d1_databases]]
+binding = "DB"
+database_name = "ritual-guestbook"
+database_id = "81e5ac67-1b7b-47ff-8c81-a1b857e3136b"
+
+# Gallery database
+[[d1_databases]]
+binding = "GALLERY_DB"
+database_name = "ritual-gallery"
+database_id = "3d3ca3f9-8d9f-442d-90f6-d133c9f76e79"
