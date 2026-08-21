@@ -226,7 +226,7 @@
 
 (function signalTicker() {
     const quotes = [
-        '"Religion creates division; love creates unity"',
+        '"Left behind a land forsaken"',
         '"Every ritual begins with a single breath."',
         '"Is life the moment we cherish? Or the moment we are cherished?"',
         '"We never understand the value of something until we lose it forever"',
