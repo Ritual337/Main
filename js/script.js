@@ -476,18 +476,18 @@
 
     const audio = new Audio();
     const playlist = [
-        { title: 'Where Have You Been', artist: 'Bryan V', src: 'music/Bryan V - Where Have You Been.wav' },
-        { title: 'Only One', artist: 'Carlie Hanson', src: 'music/Carlie Hanson - Only One.wav' },
-        { title: 'Reforget', artist: 'Cash Cash ft. Violet Days', src: 'music/Cash Cash, Violet Days - Reforget (feat. Violet Days).wav' },
-        { title: 'Mama', artist: 'Clean Bandit ft. Ellie Goulding', src: 'music/Clean Bandit, Ellie Goulding - Mama (feat. Ellie Goulding).wav' },
-        { title: 'Let It Be Me', artist: 'David Guetta ft. Ava Max', src: 'music/David Guetta, Ava Max - Let It Be Me (feat. Ava Max).wav' },
-        { title: 'Wilder', artist: 'Gamma Skies, Cleo Kelley', src: 'music/Gamma Skies, Cleo Kelley - Wilder.wav' },
-        { title: 'Body Back', artist: 'Gryffin, Maia Wright', src: 'music/Gryffin, Maia Wright - Body Back.wav' },
-        { title: 'Wild', artist: 'Jonas Blue', src: 'music/Jonas Blue, Chelcee Grimes, TINI, JHAYCO - Wild.wav' },
-        { title: 'Mona Lisa', artist: 'K-391', src: 'music/K-391 - Mona Lisa.wav' },
-        { title: 'Dance Alone', artist: 'Preston Pablo', src: 'music/Preston Pablo, Juliana - Dance Alone (Juliana Remix).wav' },
-        { title: 'Floating Through Space', artist: 'Sia, David Guetta', src: 'music/Sia, David Guetta - Floating Through Space.wav' },
-        { title: 'Harder', artist: 'Tiësto ft. Talay Riley', src: 'music/Tiësto, KSHMR, Talay Riley - Harder (feat. Talay Riley).wav' },
+        { title: 'Where Have You Been', artist: 'Bryan V', src: 'music/Bryan V - Where Have You Been.mp3' },
+        { title: 'Only One', artist: 'Carlie Hanson', src: 'music/Carlie Hanson - Only One.mp3' },
+        { title: 'Reforget', artist: 'Cash Cash ft. Violet Days', src: 'music/Cash Cash, Violet Days - Reforget (feat. Violet Days).mp3' },
+        { title: 'Mama', artist: 'Clean Bandit ft. Ellie Goulding', src: 'music/Clean Bandit, Ellie Goulding - Mama (feat. Ellie Goulding).mp3' },
+        { title: 'Let It Be Me', artist: 'David Guetta ft. Ava Max', src: 'music/David Guetta, Ava Max - Let It Be Me (feat. Ava Max).mp3' },
+        { title: 'Wilder', artist: 'Gamma Skies, Cleo Kelley', src: 'music/Gamma Skies, Cleo Kelley - Wilder.mp3' },
+        { title: 'Body Back', artist: 'Gryffin, Maia Wright', src: 'music/Gryffin, Maia Wright - Body Back.mp3' },
+        { title: 'Wild', artist: 'Jonas Blue', src: 'music/Jonas Blue, Chelcee Grimes, TINI, JHAYCO - Wild.mp3' },
+        { title: 'Mona Lisa', artist: 'K-391', src: 'music/K-391 - Mona Lisa.mp3' },
+        { title: 'Dance Alone', artist: 'Preston Pablo', src: 'music/Preston Pablo, Juliana - Dance Alone (Juliana Remix).mp3' },
+        { title: 'Floating Through Space', artist: 'Sia, David Guetta', src: 'music/Sia, David Guetta - Floating Through Space.mp3' },
+        { title: 'Harder', artist: 'Tiësto ft. Talay Riley', src: 'music/Tiësto, KSHMR, Talay Riley - Harder (feat. Talay Riley).mp3' },
     ];
     let curTrack = 0, isPlaying = false;
     const trackTitle = document.getElementById('track-title');
