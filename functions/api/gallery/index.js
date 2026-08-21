@@ -14,6 +14,7 @@ export async function onRequest(context) {
     id: row.id,
     src: `https://res.cloudinary.com/${env.CLOUDINARY_CLOUD_NAME}/image/upload/${row.filename}`,
     caption: row.caption || '',
+    uploaded_at: row.uploaded_at,   // ← add this line
   }));
 
   return new Response(JSON.stringify({ images }), {
