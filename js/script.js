@@ -38,10 +38,20 @@
     window.addEventListener('scroll', () => { nav.classList.toggle('scrolled', window.scrollY > 60); });
 })();
 
+// ============================================================
+// 🔁 UPDATED: UTC clock – shows the same time to everyone
+// ============================================================
 (function navClock() {
     const el = document.getElementById('nav-clock');
     if (!el) return;
-    function tick() { el.textContent = new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', second: '2-digit' }); }
+    function pad(n) { return String(n).padStart(2, '0'); }
+    function tick() {
+        const now = new Date();
+        const h = pad(now.getUTCHours());
+        const m = pad(now.getUTCMinutes());
+        const s = pad(now.getUTCSeconds());
+        el.textContent = h + ':' + m + ':' + s + ' UTC';
+    }
     tick();
     setInterval(tick, 1000);
 })();
@@ -334,6 +344,9 @@
     });
 })();
 
+// ============================================================
+// 🔁 UPDATED: Footer status also uses UTC now
+// ============================================================
 (function footerStatus() {
     const footerRight = document.getElementById('footer-right');
     const statuses = [
@@ -347,10 +360,10 @@
     ];
     function update() {
         const now = new Date();
-        const h = now.getHours();
-        const ts = now.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+        const h = now.getUTCHours();              // ← UTC hours
+        const ts = now.toUTCString().slice(17, 22); // "HH:MM:SS" from UTC string
         const status = statuses[h] || "doing something";
-        if (footerRight) footerRight.textContent = '© 2026 — you\'re reading this at ' + ts + ' · ' + status;
+        if (footerRight) footerRight.textContent = '© 2026 — you\'re reading this at ' + ts + ' UTC · ' + status;
     }
     update();
     setInterval(update, 20000);
@@ -541,10 +554,3 @@
         wrap.scrollLeft = scrollLeft - (x - startX) * 1.4;
     });
 })();
-
-console.log('%cRitual %c— archive online. %c✦',
-    'color:#ff3346;font-size:1.2em;font-family:monospace;',
-    'color:#8c8478;font-size:0.9em;',
-    'color:#d81f2f;');
-console.log('%cA personal archive. Not a portfolio. Not a resumé. Just a drawer.',
-    'color:#5c564c;font-style:italic;');
