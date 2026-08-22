@@ -51,78 +51,64 @@ body {
   }
 
 /*
-  Cloud layers: each layer is made exactly one tile-width WIDER than the
-  viewport (100vw + tile size) and slid left by exactly one tile width via
-  transform. Because the background repeats with that same period, the
-  pattern at the "to" position is pixel-identical to the "from" position,
-  so the loop reset is invisible — no seam, no jump.
+  Cloud layers — single source of truth via --tile.
 
-  transform is compositor-only (GPU), so unlike animating
-  background-position-x it doesn't force a repaint every frame and stays
-  smooth even at very slow, near-sub-pixel speeds.
+  Each layer sets one custom property, --tile, equal to its own
+  background-size. Everything else (box width, background-size, and how
+  far the keyframe travels) reads from that one variable via calc()/var().
+  That makes the old bug class structurally impossible: you can no longer
+  change the tile size in one place and forget it in another, because
+  there's only one place.
+
+  How the loop stays seamless: the box is (100vw + tile) wide, so it always
+  has one full tile of buffer to slide through. It animates from
+  translateX(-tile) to translateX(0) — i.e. it drifts in the POSITIVE x
+  direction (rightward), matching the original background-position-x
+  animation's direction. Because the travel distance exactly equals the
+  tile width, the pattern at the end of the loop is pixel-identical to the
+  pattern at the start, so the reset is invisible.
+
+  transform (not background-position) is used because it's
+  compositor/GPU-only — no repaint per frame — which is what actually
+  makes the motion look smooth rather than stepped.
+
+  To change speed: edit --duration on the relevant class. Lower = faster.
+  To reverse direction: swap the two keyframe values, or add
+  `animation-direction: reverse;` to a layer.
 */
 .clouds {
   position:absolute;
   top:0;
   left:0;
-  width:calc(100vw + 1024px);
   height:100vh;
+  width:calc(100vw + var(--tile));
   background-repeat:repeat-x;
   background-position-y:65%;
-  background-size:1024px;
+  background-size:var(--tile);
   will-change:transform;
   backface-visibility:hidden;
+  animation: drift var(--duration) linear infinite;
   }
 
-.C1 {
-  background-image:url("src/clouds/C1.png");
-  animation: moveX 1100s linear infinite;
-  }
-  
-.C2 {
-  background-image:url("src/clouds/C2.png");
-  animation: moveX 900s linear infinite;
-  }
-  
-.C3 {
-  background-image:url("src/clouds/C3.png");
-  animation: moveX 700s linear infinite;
-  }
-  
-.C4 {
-  background-image:url("src/clouds/C4.png");
-  animation: moveX 500s linear infinite;
-  }
+.C1 { --tile:1024px; --duration:180s; background-image:url("src/clouds/C1.png"); }
+.C2 { --tile:1024px; --duration:140s; background-image:url("src/clouds/C2.png"); }
+.C3 { --tile:1024px; --duration:100s; background-image:url("src/clouds/C3.png"); }
+.C4 { --tile:1024px; --duration:70s;  background-image:url("src/clouds/C4.png"); }
+.C5 { --tile:1400px; --duration:50s;  background-image:url("src/clouds/C5.png"); }
+.C6 { --tile:1400px; --duration:30s;  background-image:url("src/clouds/C6.png"); }
 
-.C5 {
-  background-image:url("src/clouds/C5.png");
-  background-size:1400px;
-  width:calc(100vw + 1400px);
-  animation: moveXB 300s linear infinite;
-  }
-
-.C6 {
-  background-image:url("src/clouds/C6.png");
-  background-size:1400px;
-  width:calc(100vw + 1400px);
-  animation: moveXB 200s linear infinite;
-  }
-  
-@keyframes moveX {
+@keyframes drift {
   from {
-    transform: translate3d(0, 0, 0);
+    transform: translate3d(calc(-1 * var(--tile)), 0, 0);
   }
   to {
-    transform: translate3d(-1024px, 0, 0);
+    transform: translate3d(0, 0, 0);
   }
 }
 
-@keyframes moveXB {
-  from {
-    transform: translate3d(0, 0, 0);
-  }
-  to {
-    transform: translate3d(-1400px, 0, 0);
+@media (prefers-reduced-motion: reduce) {
+  .clouds {
+    animation: none;
   }
 }
 
