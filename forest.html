@@ -1,0 +1,172 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>clouds.html</title>
+<style>
+
+* {
+  margin:0px;
+  padding:0px;
+  color:white;
+  }
+
+body {
+  background: rgb(0,0,0);
+  background: linear-gradient(180deg, rgba(0,0,0,1) 21%, rgba(255,255,255,1) 100%);
+  overflow:hidden;
+  width:100vw;
+  height:100vh;
+  }
+  
+.forest {
+  background-image:url("src/clouds/forest.png");
+  position:absolute;
+  background-position:bottom;
+  width:100vw;
+  height:100vh;
+  background-repeat:repeat-x;
+  }
+
+.moon {
+  background-image:url("src/clouds/moon.svg");
+  background-repeat:none;
+  background-size: contain;
+  position:absolute;
+  width:500px;
+  height:500px;
+  right:5%;
+  top:1%;
+  opacity:1;
+  }
+  
+
+.vignette {
+  background: rgb(0,0,0);
+  background: radial-gradient(circle, rgba(0,0,0,0) 30%, rgba(0,0,0,1) 90%);
+  position:absolute;
+  width:100vw;
+  height:100vh;
+  }
+
+/*
+  Cloud layers: each layer is made exactly one tile-width WIDER than the
+  viewport (100vw + tile size) and slid left by exactly one tile width via
+  transform. Because the background repeats with that same period, the
+  pattern at the "to" position is pixel-identical to the "from" position,
+  so the loop reset is invisible — no seam, no jump.
+
+  transform is compositor-only (GPU), so unlike animating
+  background-position-x it doesn't force a repaint every frame and stays
+  smooth even at very slow, near-sub-pixel speeds.
+*/
+.clouds {
+  position:absolute;
+  top:0;
+  left:0;
+  width:calc(100vw + 1024px);
+  height:100vh;
+  background-repeat:repeat-x;
+  background-position-y:65%;
+  background-size:1024px;
+  will-change:transform;
+  backface-visibility:hidden;
+  }
+
+.C1 {
+  background-image:url("src/clouds/C1.png");
+  animation: moveX 1100s linear infinite;
+  }
+  
+.C2 {
+  background-image:url("src/clouds/C2.png");
+  animation: moveX 900s linear infinite;
+  }
+  
+.C3 {
+  background-image:url("src/clouds/C3.png");
+  animation: moveX 700s linear infinite;
+  }
+  
+.C4 {
+  background-image:url("src/clouds/C4.png");
+  animation: moveX 500s linear infinite;
+  }
+
+.C5 {
+  background-image:url("src/clouds/C5.png");
+  background-size:1400px;
+  width:calc(100vw + 1400px);
+  animation: moveXB 300s linear infinite;
+  }
+
+.C6 {
+  background-image:url("src/clouds/C6.png");
+  background-size:1400px;
+  width:calc(100vw + 1400px);
+  animation: moveXB 200s linear infinite;
+  }
+  
+@keyframes moveX {
+  from {
+    transform: translate3d(0, 0, 0);
+  }
+  to {
+    transform: translate3d(-1024px, 0, 0);
+  }
+}
+
+@keyframes moveXB {
+  from {
+    transform: translate3d(0, 0, 0);
+  }
+  to {
+    transform: translate3d(-1400px, 0, 0);
+  }
+}
+
+.buttonBox {
+  position:absolute;
+  z-index:98;
+  left:50%;
+  transform:translate(-49%);
+  bottom:20px;
+  }
+  
+.buttonBox a {
+  color:white;
+  text-decoration:none;
+  display:block;
+  float:left;
+  padding-right:10px;
+  padding-left:10px;
+  font-style:italic;
+  letter-spacing:3px;
+  text-shadow: 1px 1px 6px rgba(0,0,0,0.2);
+  transition:letter-spacing 0.2s ease-in-out;
+  line-height:40px;
+  font-size:10px;
+  }
+  
+.buttonBox a:hover {
+  text-decoration:underline;
+  letter-spacing:5px;
+  }
+  
+</style>
+  </head>
+  <body>
+<div class="clouds C1"></div>
+<div class="clouds C2"></div>
+<div class="clouds C3"></div>
+<div class="clouds C4"></div>
+<div class="clouds C5"></div>
+<div class="clouds C6"></div>
+<div class="vignette"></div>
+<div class="moon"></div>
+<div class="forest"></div>
+<div class="buttonBox">
+    </div>
+  </body>
+</html>
