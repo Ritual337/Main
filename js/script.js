@@ -261,13 +261,13 @@
 (function notesSection() {
     const data = [
         { tag: 'Latest — June 2026', title: 'On why I started this site',
-            body: 'I wanted a place that was just mine. Not a feed, not a profile, not a portfolio. Something closer to a room — where things accumulate slowly and nothing needs to perform. The internet used to feel more like that, and I miss it.\n\nNobody asked for this. That\'s kind of the point. A photo that isn\'t good enough for a "grid." A thought too short for an essay and too long for a caption. This is the drawer for that stuff.\n\nIf you\'re reading this, hi. You found the drawer.' },
-        { tag: 'May 2026', title: 'Analog vs. digital — a false war',
-            body: 'People ask which one I "really" believe in, like it\'s a religion. It isn\'t. Film makes me slow down and decide before I press the shutter. Digital lets me take the photo I would\'ve missed while deciding.\n\nMost of my favorite shots — on either format — were the ones I almost didn\'t take. So no, I\'m not "team film." I\'m team pay attention.' },
-        { tag: 'April 2026', title: 'Things I noticed this month',
-            body: 'The sound a shutter makes in an empty stairwell. How every city looks the same at 4am and completely different at 8am. That I still haven\'t finished a roll I started in February. That "just five more minutes" of editing is never five minutes.\n\nNone of this adds up to anything. I just wanted to write it down before I forgot.' },
-        { tag: 'March 2026', title: 'Why I always shoot at night',
-            body: 'Daylight shows you everything at once. Night makes you choose — a streetlight, a window, a phone screen — and whatever you point the camera at becomes the whole scene.\n\nThere\'s also just less of everyone else at night. Fewer cars, fewer people, fewer opinions. It\'s the closest thing to having a city to yourself.' },
+            body: 'I wanted a place that was just mine. Not a feed, not a profile. Something closer to a room — where things accumulate slowly and nothing needs to perform. The internet used to feel more like that, and I miss it.\n\nNobody asked for this. That\'s kind of the point. A photo that isn\'t good enough for a "grid." A thought too short for an essay and too long for a caption. This is the drawer for that stuff.\n\nIf you\'re reading this, hi. You found the drawer.' },
+        { tag: 'May 2026', title: 'Humanity vs. religion — a false war',
+            body: 'People ask which one I "really" believe in, like it\'s an importance. It isn\'t. I\'m a human and humanity is my religion. If your belief makes you hate other human being just for their beliefs or appearance; your belief is false. I would pick being a human over going to \'heaven\' any day. ' },
+        { tag: 'July 2026', title: 'Got a job in IT',
+            body: 'OH MY GOD. It was such a tough time for me. Doing 3 part times was killing me but finally got my *cough* *cough* dream job in IT. It\'s stressful but it pays the bills + my ~ ;)' },
+        { tag: 'August 2026', title: 'Finally got married',
+            body: 'Daylight shows you everything at once. Night makes you choose— after so much overthinking and ups and down in life, I finally settled down with my lover of 8 years. Even though it\'s hard to get used to it at age 24. Nevertheless. Yay me :)' },
     ];
     const tabs = document.querySelectorAll('.notes-tab');
     const panel = document.getElementById('notes-panel');
