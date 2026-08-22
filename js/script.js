@@ -409,7 +409,7 @@
 })();
 
 // ============================================================
-// FIXED: cardFlip with null checks
+// cardFlip with null checks
 // ============================================================
 (function cardFlip() {
     const overlay = document.getElementById('card-overlay');
@@ -417,7 +417,6 @@
     const closeBtn = document.getElementById('card-close-btn');
     const scene = document.getElementById('card-scene');
 
-    // Guard – if any required element is missing, exit silently
     if (!overlay || !trigger || !closeBtn || !scene) return;
 
     trigger.addEventListener('click', () => {
@@ -464,9 +463,20 @@
     });
 })();
 
+// ============================================================
+// Guestbook – navigates to guestbook.html
+// ============================================================
 (function guestbookLink() {
     const trigger = document.getElementById('guestbook-interest');
     trigger?.addEventListener('click', () => { window.location.href = 'guestbook.html'; });
+})();
+
+// ============================================================
+// Gallery – navigates to gallery.html (FIXED)
+// ============================================================
+(function galleryLink() {
+    const trigger = document.getElementById('gallery-interest');
+    trigger?.addEventListener('click', () => { window.location.href = 'gallery.html'; });
 })();
 
 (function musicPlayer() {
