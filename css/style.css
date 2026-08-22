@@ -613,35 +613,228 @@ footer { border-top: 1px solid var(--line); }
     .poem-card { padding: 2rem 1.4rem; max-width: 95%; }
 }
 
-/* ===== card flip (id badge) ===== */
-.card-scene { width: 360px; height: 220px; position: relative; perspective: 1100px; }
-.card-flip { width: 100%; height: 100%; position: relative; transform-style: preserve-3d; transition: transform .7s cubic-bezier(.4,0,.2,1); cursor: pointer; }
-.card-scene.flipped .card-flip, .card-scene.hover-flipped .card-flip { transform: rotateY(180deg); }
-.card-face {
-    position: absolute; width: 100%; height: 100%; backface-visibility: hidden; border: 1px solid var(--line-bright);
-    display: flex; flex-direction: column; align-items: center; justify-content: center; overflow: hidden; background: var(--bg2);
+/* ===== ✦ UPDATED CARD STYLES (overlay) ===== */
+.card-overlay .card-scene {
+    width: 360px;
+    height: 244px;
+    position: relative;
+    perspective: 1100px;
 }
-.card-hole { position: absolute; top: .8rem; left: 50%; transform: translateX(-50%); width: 14px; height: 14px; border-radius: 50%; background: var(--bg); border: 1px solid var(--line-bright); z-index: 2; }
-.card-front { color: var(--paper); }
-.card-front-accent { position: absolute; top: 0; left: 0; width: 100%; height: 3px; background: var(--red); box-shadow: 0 0 20px var(--red-glow-strong); }
-.card-front-text { font-family: var(--display); font-size: 3.6rem; letter-spacing: .01em; line-height: 1; text-transform: uppercase; z-index: 1; }
-.card-front-text .red-part { color: var(--red-bright); }
-.card-front-sub { font-family: var(--mono); font-size: .5rem; color: var(--ink); letter-spacing: .3em; text-transform: uppercase; margin-top: .5rem; z-index: 1; }
-.card-back { transform: rotateY(180deg); color: var(--paper); font-family: var(--mono); padding: 1.9rem 1.7rem 1.5rem; justify-content: space-between; align-items: stretch; }
-.card-back-name { font-family: var(--display); font-size: 1.5rem; letter-spacing: .1em; margin-bottom: .2rem; text-transform: uppercase; }
-.card-back-name .red-dot { color: var(--red-bright); }
-.card-back-title { font-size: .55rem; color: var(--red-bright); letter-spacing: .18em; text-transform: uppercase; margin-bottom: 1rem; }
-.card-back-details { display: flex; flex-direction: column; gap: .5rem; font-size: .55rem; color: var(--ink); letter-spacing: .06em; }
-.card-detail-row { display: flex; align-items: center; gap: .5rem; }
-.card-detail-icon { width: 14px; text-align: center; color: var(--red-bright); font-size: .6rem; }
-.card-back-line { width: 100%; height: 8px; margin: .8rem 0; background-image: repeating-linear-gradient(90deg, var(--line-bright) 0 2px, transparent 2px 5px); opacity: .8; }
-.card-back-footer { display: flex; justify-content: space-between; align-items: center; font-size: .48rem; color: var(--ink-dim); letter-spacing: .1em; }
-.copyable { cursor: pointer; transition: color .15s; }
-.copyable:hover { color: var(--red-bright) !important; }
+.card-overlay .card-flip {
+    width: 100%;
+    height: 100%;
+    position: relative;
+    transform-style: preserve-3d;
+    transition: transform 0.7s cubic-bezier(0.4, 0, 0.2, 1);
+    cursor: pointer;
+}
+.card-overlay .card-scene.flipped .card-flip,
+.card-overlay .card-scene.hover-flipped .card-flip {
+    transform: rotateY(180deg);
+}
+.card-overlay .card-face {
+    position: absolute;
+    width: 100%;
+    height: 100%;
+    backface-visibility: hidden;
+    border: 1px solid var(--line-bright);
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    overflow: hidden;
+    background: var(--bg2);
+    border-radius: 18px;
+    padding: 22px 26px;
+}
+.card-overlay .card-front {
+    justify-content: center;
+    align-items: center;
+    text-align: center;
+    padding: 22px 30px;
+}
+.card-overlay .card-front .card-front-text {
+    font-family: var(--display);
+    font-size: clamp(58px, 14vw, 78px);
+    letter-spacing: .01em;
+    line-height: 1;
+    color: var(--paper);
+}
+.card-overlay .card-front .card-front-text .accent {
+    color: var(--red-bright);
+}
+.card-overlay .card-back {
+    transform: rotateY(180deg);
+    justify-content: flex-start;
+    padding: 22px 26px;
+}
+.card-overlay .card-back .face-row {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    width: 100%;
+}
+.card-overlay .card-back .serial {
+    font-size: 10px;
+    letter-spacing: .14em;
+    color: var(--ink);
+    text-transform: uppercase;
+}
+.card-overlay .card-back .back-body {
+    padding-top: 4px;
+    width: 100%;
+}
+.card-overlay .card-back .back-name {
+    font-family: var(--display);
+    font-size: 26px;
+    letter-spacing: .02em;
+    line-height: 1;
+    color: var(--paper);
+}
+.card-overlay .card-back .back-name .accent {
+    color: var(--red-bright);
+}
+.card-overlay .card-back .back-title {
+    margin-top: 4px;
+    font-size: 11px;
+    letter-spacing: .1em;
+    text-transform: uppercase;
+    color: var(--ink);
+}
+.card-overlay .card-back .hr {
+    height: 1px;
+    background: linear-gradient(90deg, transparent, var(--line), transparent);
+    margin: 8px 0;
+    flex-shrink: 0;
+    width: 100%;
+}
+.card-overlay .card-back .detail-list {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+    display: flex;
+    flex-direction: column;
+    gap: 7px;
+    width: 100%;
+}
+.card-overlay .card-back .detail {
+    display: flex;
+    align-items: center;
+    gap: 9px;
+    font-size: 12.5px;
+    color: var(--paper);
+    border-radius: 6px;
+    padding: 3px 4px;
+    margin: -3px -4px;
+}
+.card-overlay .card-back .detail-icon {
+    color: var(--red-bright);
+    font-size: 11px;
+    width: 14px;
+    flex-shrink: 0;
+    text-align: center;
+}
+.card-overlay .card-back .detail-text {
+    flex: 1;
+}
+.card-overlay .card-back .detail.copyable {
+    cursor: pointer;
+    transition: background .2s var(--transition);
+}
+.card-overlay .card-back .detail.copyable:hover,
+.card-overlay .card-back .detail.copyable:focus-visible {
+    background: rgba(236, 230, 216, .06);
+    outline: none;
+}
+.card-overlay .card-back .detail-action {
+    font-size: 9.5px;
+    letter-spacing: .1em;
+    text-transform: uppercase;
+    color: var(--ink);
+    border: 1px solid var(--line);
+    border-radius: 20px;
+    padding: 2px 7px;
+    opacity: 0;
+    transform: translateX(-2px);
+    transition: opacity .2s var(--transition), transform .2s var(--transition), color .2s, border-color .2s;
+}
+.card-overlay .card-back .detail.copyable:hover .detail-action,
+.card-overlay .card-back .detail.copyable:focus-visible .detail-action {
+    opacity: 1;
+    transform: translateX(0);
+}
+.card-overlay .card-back .detail.copied .detail-action {
+    opacity: 1;
+    transform: translateX(0);
+    color: var(--red-bright);
+    border-color: rgba(216, 31, 47, .5);
+}
+.card-overlay .card-back .back-footer {
+    margin-top: auto;
+    display: flex;
+    align-items: center;
+    gap: 14px;
+    width: 100%;
+}
+.card-overlay .card-back .barcode {
+    height: 26px;
+    flex: 1;
+    opacity: .8;
+    background: repeating-linear-gradient(90deg,
+            var(--paper) 0 2px, transparent 2px 4px,
+            var(--paper) 4px 5px, transparent 5px 9px,
+            var(--paper) 9px 12px, transparent 12px 13px,
+            var(--paper) 13px 14px, transparent 14px 19px,
+            var(--paper) 19px 21px, transparent 21px 24px,
+            var(--paper) 24px 25px, transparent 25px 30px);
+}
+.card-overlay .card-back .footer-text {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-end;
+    gap: 2px;
+    font-size: 9.5px;
+    letter-spacing: .1em;
+    text-transform: uppercase;
+    color: var(--ink);
+    flex-shrink: 0;
+    white-space: nowrap;
+}
+.card-overlay .card-back .sheen,
+.card-overlay .card-front .sheen {
+    position: absolute;
+    inset: 0;
+    pointer-events: none;
+    border-radius: inherit;
+    background: radial-gradient(360px circle at var(--mx, 50%) var(--my, 38%),
+            rgba(255, 255, 255, .14), rgba(255, 255, 255, .03) 34%, transparent 62%);
+    mix-blend-mode: overlay;
+}
+.card-overlay .card-front .foil-strip {
+    position: absolute;
+    right: -10px;
+    top: -14px;
+    bottom: -14px;
+    width: 64px;
+    pointer-events: none;
+    opacity: .45;
+    background: repeating-linear-gradient(124deg,
+            transparent 0 9px,
+            rgba(216, 31, 47, .25) 9px 11px,
+            transparent 11px 20px,
+            rgba(236, 230, 216, .08) 20px 22px);
+    background-size: 140% 140%;
+    animation: foilShift 9s linear infinite;
+}
+@keyframes foilShift {
+    0% { background-position: 0% 0%; }
+    100% { background-position: 0% 100%; }
+}
 @media (max-width: 860px) {
-    .card-scene { width: 285px; height: 175px; }
-    .card-front-text { font-size: 2.6rem; }
-    .card-back-name { font-size: 1.15rem; }
+    .card-overlay .card-scene { width: 285px; height: 218px; }
+    .card-overlay .card-front .card-front-text { font-size: 2.6rem; }
+    .card-overlay .card-back .back-name { font-size: 1.15rem; }
+    .card-overlay .card-face { padding: 18px 22px; }
 }
 
 /* ===== music player ===== */

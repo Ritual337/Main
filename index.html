@@ -288,37 +288,37 @@
                     <span class="index-name">Photography</span>
                     <span class="index-desc">Film mostly. 35mm. The grain matters more than the pixels.</span>
                     <span class="index-arrow">→</span>
-                </a>
+                </button>
                 <button class="index-cell featured" type="button" id="design-interest">
                     <span class="index-num">02</span>
                     <span class="index-name">Design</span>
                     <span class="index-desc">Visual systems, type, and things that feel right without explanation.</span>
                     <span class="index-arrow">→</span>
-                </a>
+                </button>
                 <button class="index-cell featured" type="button" id="music-interest">
                     <span class="index-num">03</span>
                     <span class="index-name">Music</span>
                     <span class="index-desc">Whatever sounds good at 2am. Player included.</span>
                     <span class="index-arrow">→</span>
-                </a>
+                </button>
                 <button class="index-cell" type="button" id="card-interest">
                     <span class="index-num">04</span>
                     <span class="index-name">Card</span>
                     <span class="index-desc">Digital business card — hover or tap to flip. Old-school charm.</span>
                     <span class="index-arrow">→</span>
-                </a>
+                </button>
                 <button class="index-cell" type="button" id="writing-interest">
                     <span class="index-num">05</span>
                     <span class="index-name">Writing</span>
                     <span class="index-desc">Observations. Fragments. Nothing finished, everything true.</span>
                     <span class="index-arrow">→</span>
-                </a>
+                </button>
                 <button class="index-cell featured" type="button" id="guestbook-interest">
                     <span class="index-num">06</span>
                     <span class="index-name">Guestbook</span>
                     <span class="index-desc">Leave a note. Read what everyone else left too.</span>
                     <span class="index-arrow">→</span>
-                </a>
+                </button>
             </div>
         </section>
     </main>
@@ -343,11 +343,71 @@
         <div class="lightbox-frame">
             <div class="lightbox-corner-a"></div>
             <div class="lightbox-corner-b"></div>
-            <button class="lightbox-close" id="lightbox-close" aria-label="Close lightbox">✕ &nbsp;Close</button>
-            <button class="lightbox-nav lightbox-prev" id="lightbox-prev" aria-label="Previous">←</button>
-            <button class="lightbox-nav lightbox-next" id="lightbox-next" aria-label="Next">→</button>
+            <button class="lightbox-close" id="lightbox-close" aria-label="Close image">✕ &nbsp;Close</button>
+            <button class="lightbox-nav lightbox-prev" id="lightbox-prev" aria-label="Previous image">←</button>
+            <button class="lightbox-nav lightbox-next" id="lightbox-next" aria-label="Next image">→</button>
             <img class="lightbox-img" id="lightbox-img" src="" alt="" />
             <div class="lightbox-caption" id="lightbox-caption"></div>
+        </div>
+    </div>
+
+    <!-- ===== UPDATED CARD OVERLAY ===== -->
+    <div class="card-overlay" id="card-overlay">
+        <button class="lightbox-close" id="card-close-btn" aria-label="Close card" style="position:absolute;top:-2.5rem;right:0;">✕ &nbsp;Close</button>
+        <div class="card-scene" id="card-scene">
+            <div class="card-flip">
+
+                <!-- FRONT — only the logo -->
+                <div class="card-face card-front">
+                    <div class="foil-strip"></div>
+                    <div class="sheen"></div>
+                    <div class="card-front-text">Ritu<span class="accent">al</span></div>
+                </div>
+
+                <!-- BACK — professional details -->
+                <div class="card-face card-back">
+                    <div class="sheen"></div>
+
+                    <div class="face-row">
+                        <span class="serial">Profile</span>
+                    </div>
+
+                    <div class="back-body">
+                        <div class="back-name">Ritu<span class="accent">al</span></div>
+                        <div class="back-title">Designer &amp; Creative</div>
+                    </div>
+
+                    <div class="hr"></div>
+
+                    <ul class="detail-list">
+                        <li class="detail copyable" data-copy="ritual@creates.space" role="button" tabindex="0" aria-label="Copy email ritual@creates.space">
+                            <span class="detail-icon">✉</span>
+                            <span class="detail-text">ritual@creates.space</span>
+                            <span class="detail-action">Copy</span>
+                        </li>
+                        <li class="detail">
+                            <span class="detail-icon">⌂</span>
+                            <span class="detail-text">Somewhere on earth</span>
+                        </li>
+                        <li class="detail copyable" data-copy="@ritual.work" role="button" tabindex="0" aria-label="Copy handle @ritual.work">
+                            <span class="detail-icon">◈</span>
+                            <span class="detail-text">@ritual.work</span>
+                            <span class="detail-action">Copy</span>
+                        </li>
+                    </ul>
+
+                    <div class="hr"></div>
+
+                    <div class="back-footer">
+                        <div class="barcode"></div>
+                        <div class="footer-text">
+                            <span>ritual.space</span>
+                            <span>est. ∞</span>
+                        </div>
+                    </div>
+                </div>
+
+            </div>
         </div>
     </div>
 
@@ -377,40 +437,6 @@ Our roots entwined with hers, unyielding, condemned.</div>
             <div class="glitch-scan-lines"></div>
             <div class="glitch-ritual-wrapper">
                 <h1 class="glitch-ritual" data-text="Ritual" id="glitch-ritual-text">Ritu<span class="glitch-red">al</span></h1>
-            </div>
-        </div>
-    </div>
-
-    <div class="card-overlay" id="card-overlay">
-        <button class="lightbox-close" id="card-close-btn" aria-label="Close card" style="position:absolute;top:-2.5rem;right:0;">✕ &nbsp;Close</button>
-        <div class="card-scene" id="card-scene">
-            <div class="card-flip">
-                <div class="card-face card-front">
-                    <div class="card-hole"></div>
-                    <div class="card-front-accent"></div>
-                    <span class="card-front-text">Ritu<span class="red-part">al</span></span>
-                    <span class="card-front-sub">creative — access card</span>
-                </div>
-                <div class="card-face card-back">
-                    <div class="card-hole"></div>
-                    <div>
-                        <div class="card-back-name">Ritu<span class="red-dot">al</span></div>
-                        <div class="card-back-title">Designer &amp; Creative</div>
-                        <div class="card-back-details">
-                            <div class="card-detail-row copyable" data-copy="ritual@creates.space" title="Click to copy" role="button" tabindex="0">
-                                <span class="card-detail-icon">✉</span><span>ritual@creates.space</span>
-                            </div>
-                            <div class="card-detail-row">
-                                <span class="card-detail-icon">⌂</span><span>Somewhere on earth</span>
-                            </div>
-                            <div class="card-detail-row copyable" data-copy="@ritual.work" title="Click to copy" role="button" tabindex="0">
-                                <span class="card-detail-icon">◈</span><span>@ritual.work</span>
-                            </div>
-                        </div>
-                    </div>
-                    <div class="card-back-line"></div>
-                    <div class="card-back-footer"><span>ritual.space</span><span>est. ∞</span></div>
-                </div>
             </div>
         </div>
     </div>

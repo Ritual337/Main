@@ -113,6 +113,10 @@
     const backdrop = document.getElementById('lightbox-backdrop');
     const prev = document.getElementById('lightbox-prev');
     const next = document.getElementById('lightbox-next');
+    if (!items.length || !lb || !img || !cap || !close || !backdrop || !prev || !next) {
+        console.warn('lightboxFx: required element(s) missing, skipping lightbox init.');
+        return;
+    }
     let cur = 0;
 
     function open(i) {
@@ -360,8 +364,8 @@
     ];
     function update() {
         const now = new Date();
-        const h = now.getUTCHours();              // ← UTC hours
-        const ts = now.toUTCString().slice(17, 22); // "HH:MM:SS" from UTC string
+        const h = now.getUTCHours();
+        const ts = now.toUTCString().slice(17, 22);
         const status = statuses[h] || "doing something";
         if (footerRight) footerRight.textContent = '© 2026 — you\'re reading this at ' + ts + ' UTC · ' + status;
     }
@@ -404,18 +408,51 @@
     document.addEventListener('keydown', (e) => { if (e.key === 'Escape' && overlay.classList.contains('active')) { overlay.classList.remove('active'); document.body.classList.remove('overlay-open'); stopCycle(); } });
 })();
 
+// ============================================================
+// FIXED: cardFlip with null checks
+// ============================================================
 (function cardFlip() {
     const overlay = document.getElementById('card-overlay');
     const trigger = document.getElementById('card-interest');
     const closeBtn = document.getElementById('card-close-btn');
     const scene = document.getElementById('card-scene');
-    if (!overlay || !trigger) return;
-    trigger.addEventListener('click', () => { overlay.classList.add('active'); document.body.classList.add('overlay-open'); });
-    closeBtn.addEventListener('click', () => { overlay.classList.remove('active'); document.body.classList.remove('overlay-open'); scene.classList.remove('flipped', 'hover-flipped'); });
-    overlay.addEventListener('click', (e) => { if (e.target === overlay) { overlay.classList.remove('active'); document.body.classList.remove('overlay-open'); scene.classList.remove('flipped', 'hover-flipped'); } });
-    document.addEventListener('keydown', (e) => { if (e.key === 'Escape' && overlay.classList.contains('active')) { overlay.classList.remove('active'); document.body.classList.remove('overlay-open'); scene.classList.remove('flipped', 'hover-flipped'); } });
-    scene.addEventListener('mouseenter', () => { if (!scene.classList.contains('flipped')) scene.classList.add('hover-flipped'); });
-    scene.addEventListener('mouseleave', () => { scene.classList.remove('hover-flipped'); });
+
+    // Guard – if any required element is missing, exit silently
+    if (!overlay || !trigger || !closeBtn || !scene) return;
+
+    trigger.addEventListener('click', () => {
+        overlay.classList.add('active');
+        document.body.classList.add('overlay-open');
+    });
+
+    closeBtn.addEventListener('click', () => {
+        overlay.classList.remove('active');
+        document.body.classList.remove('overlay-open');
+        scene.classList.remove('flipped', 'hover-flipped');
+    });
+
+    overlay.addEventListener('click', (e) => {
+        if (e.target === overlay) {
+            overlay.classList.remove('active');
+            document.body.classList.remove('overlay-open');
+            scene.classList.remove('flipped', 'hover-flipped');
+        }
+    });
+
+    document.addEventListener('keydown', (e) => {
+        if (e.key === 'Escape' && overlay.classList.contains('active')) {
+            overlay.classList.remove('active');
+            document.body.classList.remove('overlay-open');
+            scene.classList.remove('flipped', 'hover-flipped');
+        }
+    });
+
+    scene.addEventListener('mouseenter', () => {
+        if (!scene.classList.contains('flipped')) scene.classList.add('hover-flipped');
+    });
+    scene.addEventListener('mouseleave', () => {
+        scene.classList.remove('hover-flipped');
+    });
     scene.addEventListener('click', () => {
         scene.classList.toggle('flipped');
         if (scene.classList.contains('flipped')) scene.classList.remove('hover-flipped');
@@ -428,11 +465,6 @@
 })();
 
 (function guestbookLink() {
-    // The guestbook used to be an in-page overlay with entries that vanished
-    // when the tab closed. It's now a real, persisted page (guestbook.html) —
-    // see guestbook-store.js for how entries are saved. The footer link is a
-    // plain <a href="guestbook.html">, so it needs no JS; this just sends the
-    // "Guestbook" index button to the same place.
     const trigger = document.getElementById('guestbook-interest');
     trigger?.addEventListener('click', () => { window.location.href = 'guestbook.html'; });
 })();
