@@ -1,14 +1,13 @@
 /*
- * script.js — all page interactivity except the three.js background
- * (see three-loader.js / three-scene.js). Loaded with `defer` from <head>,
- * so it runs after the document is parsed without blocking first paint.
+ * script.js — page interactivity (component logic only).
+ * Scroll-driven motion lives in interactions.js (Lenis + GSAP).
+ * The three.js background lives in three-loader.js / three-scene.js.
  */
 (function cursorGlow() {
     const glow = document.getElementById('cursor-glow');
     if (!glow) return;
     document.addEventListener('mousemove', (e) => {
-        glow.style.left = e.clientX + 'px';
-        glow.style.top = e.clientY + 'px';
+        glow.style.transform = `translate(${e.clientX}px, ${e.clientY}px) translate(-50%, -50%)`;
     });
     const hoverEls = document.querySelectorAll(
         'a, button, .clickable-img, .index-cell, .notes-tab, .frame-item, .log-card, .read-more-btn, .copyable, .whisper-dot, .card-scene'
@@ -21,36 +20,38 @@
 
 (function scrollProgress() {
     const bar = document.getElementById('scroll-progress');
-    window.addEventListener('scroll', () => {
+    if (!bar) return;
+    function update() {
         const p = document.documentElement.scrollHeight - window.innerHeight;
-        bar.style.width = p > 0 ? (window.scrollY / p) * 100 + '%' : '0%';
-    });
+        bar.style.transform = 'scaleX(' + (p > 0 ? window.scrollY / p : 0) + ')';
+    }
+    window.addEventListener('scroll', update);
+    update();
 })();
 
 (function backToTop() {
     const btn = document.getElementById('back-to-top');
+    if (!btn) return;
     window.addEventListener('scroll', () => { btn.classList.toggle('visible', window.scrollY > 500); });
-    btn.addEventListener('click', () => window.scrollTo({ top: 0, behavior: 'smooth' }));
+    btn.addEventListener('click', () => {
+        if (window.__lenis) window.__lenis.scrollTo(0, { duration: 1.1 });
+        else window.scrollTo({ top: 0, behavior: 'smooth' });
+    });
 })();
 
 (function navScroll() {
     const nav = document.getElementById('nav-bar');
+    if (!nav) return;
     window.addEventListener('scroll', () => { nav.classList.toggle('scrolled', window.scrollY > 60); });
 })();
 
-// ============================================================
-// 🔁 UPDATED: UTC clock – shows the same time to everyone
-// ============================================================
 (function navClock() {
     const el = document.getElementById('nav-clock');
     if (!el) return;
     function pad(n) { return String(n).padStart(2, '0'); }
     function tick() {
         const now = new Date();
-        const h = pad(now.getUTCHours());
-        const m = pad(now.getUTCMinutes());
-        const s = pad(now.getUTCSeconds());
-        el.textContent = h + ':' + m + ':' + s + ' UTC';
+        el.textContent = pad(now.getUTCHours()) + ':' + pad(now.getUTCMinutes()) + ':' + pad(now.getUTCSeconds()) + ' UTC';
     }
     tick();
     setInterval(tick, 1000);
@@ -61,7 +62,9 @@
     if (!btn) return;
     btn.addEventListener('click', () => {
         const target = document.getElementById('dossier');
-        if (target) target.scrollIntoView({ behavior: 'smooth' });
+        if (!target) return;
+        if (window.__lenis) window.__lenis.scrollTo(target, { offset: -60, duration: 1.1 });
+        else target.scrollIntoView({ behavior: 'smooth' });
     });
 })();
 
@@ -69,6 +72,7 @@
     const toggle = document.getElementById('mobile-nav-toggle');
     const menu = document.getElementById('mobile-menu');
     const closeBtn = document.getElementById('mobile-menu-close');
+    if (!toggle || !menu || !closeBtn) return;
     const links = menu.querySelectorAll('a');
     toggle.addEventListener('click', () => menu.classList.add('active'));
     closeBtn.addEventListener('click', () => menu.classList.remove('active'));
@@ -94,6 +98,7 @@
 
 (function toastSystem() {
     const stack = document.getElementById('toast-stack');
+    if (!stack) return;
     window.showToast = function (msg, dur = 2600) {
         const el = document.createElement('div');
         el.className = 'toast';
@@ -113,10 +118,7 @@
     const backdrop = document.getElementById('lightbox-backdrop');
     const prev = document.getElementById('lightbox-prev');
     const next = document.getElementById('lightbox-next');
-    if (!items.length || !lb || !img || !cap || !close || !backdrop || !prev || !next) {
-        console.warn('lightboxFx: required element(s) missing, skipping lightbox init.');
-        return;
-    }
+    if (!items.length || !lb || !img || !cap || !close || !backdrop || !prev || !next) return;
     let cur = 0;
 
     function open(i) {
@@ -198,13 +200,12 @@
     let idx = 0;
     let html = '';
     if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) {
-        el.innerHTML = full.replace(/\n/g, '<br>');
+        el.innerHTML = full;
         return;
     }
     function type() {
         if (idx < full.length) {
-            const ch = full[idx];
-            html += ch === '\n' ? '<br>' : ch;
+            html += full[idx];
             idx++;
             el.innerHTML = html + ' <span class="cursor-blink"></span>';
             setTimeout(type, 22);
@@ -213,19 +214,9 @@
             if (cursor) cursor.classList.add('hidden');
         }
     }
-    setTimeout(type, 900);
-})();
-
-(function revealOnScroll() {
-    const els = document.querySelectorAll('.reveal');
-    if ('IntersectionObserver' in window) {
-        const obs = new IntersectionObserver((entries) => {
-            entries.forEach(e => { if (e.isIntersecting) { e.target.classList.add('in-view'); obs.unobserve(e.target); } });
-        }, { threshold: 0.12, rootMargin: '0px 0px -40px 0px' });
-        els.forEach(el => obs.observe(el));
-    } else {
-        els.forEach(el => el.classList.add('in-view'));
-    }
+    // Wait for the hero letter entrance (interactions.js) before typing.
+    if (window.__heroDone) setTimeout(type, 200);
+    else document.addEventListener('heroDone', () => setTimeout(type, 200), { once: true });
 })();
 
 (function signalTicker() {
@@ -238,6 +229,7 @@
     ];
     const textEl = document.getElementById('whisper-text');
     const dots = document.querySelectorAll('.whisper-dot');
+    if (!textEl || !dots.length) return;
     let current = 0;
     let interval;
     function show(i) {
@@ -275,6 +267,7 @@
     const titleEl = document.getElementById('notes-title');
     const bodyEl = document.getElementById('notes-body');
     const toggleBtn = document.getElementById('notes-toggle');
+    if (!tabs.length || !panel || !tagEl || !titleEl || !bodyEl || !toggleBtn) return;
     let cur = 0;
     let expanded = false;
 
@@ -325,6 +318,7 @@
 
 (function easterEggClicks() {
     const link = document.getElementById('easter-egg-link');
+    if (!link) return;
     let count = 0;
     link.addEventListener('click', (e) => {
         e.preventDefault();
@@ -348,11 +342,9 @@
     });
 })();
 
-// ============================================================
-// 🔁 UPDATED: Footer status also uses UTC now
-// ============================================================
 (function footerStatus() {
     const footerRight = document.getElementById('footer-right');
+    if (!footerRight) return;
     const statuses = [
         "probably still asleep", "up way too late", "up way too late", "technically tomorrow now",
         "the quiet hour", "too early for anyone", "coffee, first attempt", "getting going, slowly",
@@ -367,7 +359,7 @@
         const h = now.getUTCHours();
         const ts = now.toUTCString().slice(17, 22);
         const status = statuses[h] || "doing something";
-        if (footerRight) footerRight.textContent = '© 2026 — you\'re reading this at ' + ts + ' UTC · ' + status;
+        footerRight.textContent = '© 2026 — you\'re reading this at ' + ts + ' UTC · ' + status;
     }
     update();
     setInterval(update, 20000);
@@ -408,50 +400,23 @@
     document.addEventListener('keydown', (e) => { if (e.key === 'Escape' && overlay.classList.contains('active')) { overlay.classList.remove('active'); document.body.classList.remove('overlay-open'); stopCycle(); } });
 })();
 
-// ============================================================
-// cardFlip with null checks
-// ============================================================
 (function cardFlip() {
     const overlay = document.getElementById('card-overlay');
     const trigger = document.getElementById('card-interest');
     const closeBtn = document.getElementById('card-close-btn');
     const scene = document.getElementById('card-scene');
-
     if (!overlay || !trigger || !closeBtn || !scene) return;
 
-    trigger.addEventListener('click', () => {
-        overlay.classList.add('active');
-        document.body.classList.add('overlay-open');
-    });
-
-    closeBtn.addEventListener('click', () => {
-        overlay.classList.remove('active');
-        document.body.classList.remove('overlay-open');
-        scene.classList.remove('flipped', 'hover-flipped');
-    });
-
+    trigger.addEventListener('click', () => { overlay.classList.add('active'); document.body.classList.add('overlay-open'); });
+    closeBtn.addEventListener('click', () => { overlay.classList.remove('active'); document.body.classList.remove('overlay-open'); scene.classList.remove('flipped', 'hover-flipped'); });
     overlay.addEventListener('click', (e) => {
-        if (e.target === overlay) {
-            overlay.classList.remove('active');
-            document.body.classList.remove('overlay-open');
-            scene.classList.remove('flipped', 'hover-flipped');
-        }
+        if (e.target === overlay) { overlay.classList.remove('active'); document.body.classList.remove('overlay-open'); scene.classList.remove('flipped', 'hover-flipped'); }
     });
-
     document.addEventListener('keydown', (e) => {
-        if (e.key === 'Escape' && overlay.classList.contains('active')) {
-            overlay.classList.remove('active');
-            document.body.classList.remove('overlay-open');
-            scene.classList.remove('flipped', 'hover-flipped');
-        }
+        if (e.key === 'Escape' && overlay.classList.contains('active')) { overlay.classList.remove('active'); document.body.classList.remove('overlay-open'); scene.classList.remove('flipped', 'hover-flipped'); }
     });
-
-    scene.addEventListener('mouseenter', () => {
-        if (!scene.classList.contains('flipped')) scene.classList.add('hover-flipped');
-    });
-    scene.addEventListener('mouseleave', () => {
-        scene.classList.remove('hover-flipped');
-    });
+    scene.addEventListener('mouseenter', () => { if (!scene.classList.contains('flipped')) scene.classList.add('hover-flipped'); });
+    scene.addEventListener('mouseleave', () => scene.classList.remove('hover-flipped'));
     scene.addEventListener('click', () => {
         scene.classList.toggle('flipped');
         if (scene.classList.contains('flipped')) scene.classList.remove('hover-flipped');
@@ -463,20 +428,12 @@
     });
 })();
 
-// ============================================================
-// Guestbook – navigates to guestbook.html
-// ============================================================
 (function guestbookLink() {
-    const trigger = document.getElementById('guestbook-interest');
-    trigger?.addEventListener('click', () => { window.location.href = 'guestbook.html'; });
+    document.getElementById('guestbook-interest')?.addEventListener('click', () => { window.location.href = 'guestbook.html'; });
 })();
 
-// ============================================================
-// Gallery – navigates to gallery.html (FIXED)
-// ============================================================
 (function galleryLink() {
-    const trigger = document.getElementById('gallery-interest');
-    trigger?.addEventListener('click', () => { window.location.href = 'gallery.html'; });
+    document.getElementById('gallery-interest')?.addEventListener('click', () => { window.location.href = 'gallery.html'; });
 })();
 
 (function musicPlayer() {
@@ -487,7 +444,7 @@
     if (!player || !trigger) return;
     trigger.addEventListener('click', () => {
         player.classList.add('active');
-        if (!player.style.top) { player.style.top = 'calc(50% - 110px)'; player.style.left = 'calc(50% - 135px)'; }
+        if (!player.style.top) { player.style.top = 'calc(50% - 110px)'; player.style.left = 'calc(50% - 137px)'; }
     });
     closeBtn.addEventListener('click', () => { player.classList.remove('active'); audio.pause(); });
 
