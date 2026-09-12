@@ -86,24 +86,93 @@ if (!REDUCED_MOTION && window.Lenis) {
       .call(() => { window.__heroDone = true; document.dispatchEvent(new Event('heroDone')); });
 })();
 
-/* ---------- GSAP + ScrollTrigger: section reveals ---------- */
-(function scrollReveals() {
-    const els = document.querySelectorAll('.reveal');
-    if (!els.length) return;
-
-    if (REDUCED_MOTION || !window.gsap || !window.ScrollTrigger) {
-        els.forEach((el) => el.classList.add('in-view'));
-        return;
-    }
+/* ---------- GSAP + ScrollTrigger: section entrances ----------
+ * Every section gets its own authored entrance rather than one
+ * repeated fade-up — the motion is chosen to fit what the section
+ * actually is (a dossier reads like two case-file halves sliding
+ * into place, the log/archive grids assemble as a set, the notes
+ * panel opens like a drawer along its own red rule, etc). Each
+ * ScrollTrigger fires once, the first time the section is scrolled
+ * into view. */
+(function sectionEntrances() {
+    if (REDUCED_MOTION || !window.gsap || !window.ScrollTrigger) return;
     gsap.registerPlugin(ScrollTrigger);
-    els.forEach((el) => {
+
+    const EASE = 'power3.out';
+
+    function reveal(trigger, targets, vars, opts = {}) {
+        if (Array.isArray(targets) || targets instanceof NodeList) {
+            targets = Array.from(targets).filter(Boolean);
+        }
+        if (!targets || targets.length === 0) return;
         ScrollTrigger.create({
-            trigger: el,
-            start: 'top 85%',
+            trigger,
+            start: opts.start || 'top 82%',
             once: true,
-            onEnter: () => el.classList.add('in-view'),
+            onEnter: () => gsap.to(targets, {
+                opacity: 1, x: 0, y: 0, scale: 1, rotate: 0,
+                duration: opts.duration || 0.9,
+                ease: EASE,
+                stagger: opts.stagger || 0,
+                ...vars,
+            }),
         });
-    });
+    }
+
+    // Dossier — two halves slide inward from opposite edges, like a
+    // case file being opened flat.
+    const dossier = document.getElementById('dossier');
+    if (dossier) {
+        reveal(dossier, dossier.querySelector('.dossier-text'), {}, { duration: 1.05 });
+        reveal(dossier, dossier.querySelector('.dossier-visual'), {}, { duration: 1.05 });
+    }
+
+    // Index / log — heading settles first, then the grid assembles
+    // card by card, left to right.
+    const log = document.getElementById('log');
+    if (log) {
+        reveal(log, [log.querySelector(':scope > .eyebrow'), log.querySelector(':scope > .section-note')], {}, { stagger: 0.1 });
+        reveal(log, log.querySelectorAll('.log-card'), {}, { start: 'top 78%', duration: 0.7, stagger: 0.06 });
+    }
+
+    // Frames — heading and nav arrows settle; each frame's own wipe
+    // (see frameWipe below) carries the rest of the motion.
+    const frames = document.getElementById('frames');
+    if (frames) {
+        reveal(frames, [frames.querySelector(':scope > .eyebrow'), frames.querySelector(':scope > .section-note')], {}, { stagger: 0.1 });
+        reveal(frames, frames.querySelectorAll('.filmstrip-nav'), {}, { start: 'top 78%', duration: 0.6 });
+    }
+
+    // Signal — the equalizer "powers on" with a snap, then the quote
+    // and LEDs settle after, mirroring an actual signal coming through.
+    const signal = document.getElementById('signal');
+    if (signal) {
+        reveal(signal, signal.querySelector(':scope > .eyebrow'), {}, {});
+        reveal(signal, signal.querySelector('.signal-eq'), { duration: 0.5, ease: 'back.out(2.2)' }, { start: 'top 78%', duration: 0.5 });
+        reveal(signal, signal.querySelector('.whisper-container'), {}, { start: 'top 72%', duration: 0.8 });
+        reveal(signal, signal.querySelector('.whisper-leds'), {}, { start: 'top 68%', duration: 0.7 });
+    }
+
+    // Writings — tabs drop into place like index cards, then the
+    // panel slides out from behind its red rule, drawer-style.
+    const notes = document.getElementById('notes');
+    if (notes) {
+        reveal(notes, notes.querySelector(':scope > .eyebrow'), {}, {});
+        reveal(notes, notes.querySelectorAll('.notes-tab'), {}, { start: 'top 80%', duration: 0.6, stagger: 0.07 });
+        reveal(notes, notes.querySelector('.notes-panel'), {}, { start: 'top 74%', duration: 0.9 });
+    }
+
+    // Archives — grid cells assemble in reading order, same rhythm as
+    // the log grid so the two "index" moments of the site rhyme.
+    const indexSection = document.getElementById('index');
+    if (indexSection) {
+        reveal(indexSection, indexSection.querySelector(':scope > .eyebrow'), {}, {});
+        reveal(indexSection, indexSection.querySelectorAll('.index-cell'), {}, { start: 'top 78%', duration: 0.7, stagger: 0.06 });
+    }
+
+    // Footer — a quiet settle, no fanfare; it's chrome, not content.
+    const footerInner = document.querySelector('footer .footer-inner');
+    if (footerInner) reveal(document.querySelector('footer'), footerInner, {}, { start: 'top 92%', duration: 0.7 });
 })();
 
 /* ---------- GSAP + ScrollTrigger: frame-wipe reveal (Frames section) ---------- */

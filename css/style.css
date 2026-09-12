@@ -544,10 +544,49 @@ footer { border-top: 1px solid var(--line); }
     .footer-left { flex-direction: column; align-items: flex-start; gap: .8rem; }
 }
 
-/* ===== scroll-reveal (GSAP-driven; JS toggles .in-view) ===== */
-.reveal { opacity: 0; transform: translateY(28px); }
-.reveal.in-view { transition: opacity .9s var(--ease-out), transform .9s var(--ease-out); opacity: 1; transform: translateY(0); }
-@media (prefers-reduced-motion: reduce) { .reveal { opacity: 1 !important; transform: none !important; transition: none !important; } }
+/* ===== scroll entrances (GSAP-driven; per-section, content-aware) =====
+   The .reveal class on sections is kept only as a semantic marker for
+   "this section animates in on first scroll" — it no longer hides
+   anything itself. Each section's own children carry their own hidden
+   state below, animated to rest by the sectionEntrances() timelines in
+   interactions.js so every section reads as an authored moment rather
+   than one repeated fade. */
+.reveal { opacity: 1; transform: none; }
+
+#dossier .dossier-text { opacity: 0; transform: translateX(-46px); }
+#dossier .dossier-visual { opacity: 0; transform: translateX(46px) rotate(6deg); }
+
+#log > .eyebrow, #log > .section-note { opacity: 0; transform: translateY(22px); }
+#log .log-card { opacity: 0; transform: translateY(26px) scale(.95); }
+
+#frames > .eyebrow, #frames > .section-note { opacity: 0; transform: translateY(22px); }
+#frames .filmstrip-nav { opacity: 0; }
+
+#signal > .eyebrow { opacity: 0; transform: translateY(22px); }
+#signal .signal-eq { opacity: 0; transform: scale(.8); }
+#signal .whisper-container { opacity: 0; transform: translateY(18px); }
+#signal .whisper-leds { opacity: 0; transform: translateY(14px); }
+
+#notes > .eyebrow { opacity: 0; transform: translateY(22px); }
+#notes .notes-tab { opacity: 0; transform: translateY(-16px); }
+#notes .notes-panel { opacity: 0; transform: translateX(-36px); }
+
+#index > .eyebrow { opacity: 0; transform: translateY(22px); }
+#index .index-cell { opacity: 0; transform: translateY(26px) scale(.95); }
+
+footer .footer-inner { opacity: 0; transform: translateY(20px); }
+
+@media (prefers-reduced-motion: reduce) {
+    #dossier .dossier-text, #dossier .dossier-visual,
+    #log > .eyebrow, #log > .section-note, #log .log-card,
+    #frames > .eyebrow, #frames > .section-note, #frames .filmstrip-nav,
+    #signal > .eyebrow, #signal .signal-eq, #signal .whisper-container, #signal .whisper-leds,
+    #notes > .eyebrow, #notes .notes-tab, #notes .notes-panel,
+    #index > .eyebrow, #index .index-cell,
+    footer .footer-inner {
+        opacity: 1 !important; transform: none !important; transition: none !important;
+    }
+}
 
 #back-to-top {
     position: fixed; bottom: 2rem; right: 2rem; z-index: 5000; width: 44px; height: 44px;
