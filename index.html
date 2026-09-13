@@ -35,6 +35,17 @@
 </head>
 <body>
 
+    <div id="preloader">
+        <div class="preloader-panel preloader-panel-top"></div>
+        <div class="preloader-panel preloader-panel-bottom"></div>
+        <div class="preloader-inner">
+            <div class="preloader-mark">R</div>
+            <div class="preloader-label">Accessing Archive</div>
+            <div class="preloader-barwrap"><div class="preloader-bar" id="preloader-bar"></div></div>
+            <div class="preloader-pct" id="preloader-pct">0%</div>
+        </div>
+    </div>
+
     <canvas id="three-canvas"></canvas>
     <div class="grain"></div>
     <div class="vignette"></div>
@@ -187,73 +198,59 @@
             </div>
         </section>
 
-        <section id="frames" class="section reveal filmstrip-region">
+        <section id="frames" class="section reveal">
             <div class="eyebrow"><span class="eyebrow-num">03</span><span class="eyebrow-text">Frames</span><span class="eyebrow-line"></span></div>
             <p class="section-note">A contact sheet of things worth stopping for.</p>
-            <button class="filmstrip-nav filmstrip-prev" id="filmstrip-prev" aria-label="Scroll frames left">←</button>
-            <button class="filmstrip-nav filmstrip-next" id="filmstrip-next" aria-label="Scroll frames right">→</button>
-            <div class="filmstrip-wrap" id="filmstrip-wrap">
-                <div class="filmstrip" id="filmstrip">
-                    <div class="frame-item wide clickable-img" data-src="src/res/1.jpg" data-caption="01 — Urban geometry at dusk">
-                        <div class="frame-sprockets"></div>
-                        <div class="frame-photo"><div class="frame-num">01</div><img src="src/res/1.jpg" alt="Urban geometry" loading="lazy" /></div>
-                        <div class="frame-sprockets"></div>
-                        <div class="frame-caption">Trees rising towards the endless sky</div>
-                    </div>
-                    <div class="frame-item clickable-img" data-src="src/res/2.webp" data-caption="02 — Still water, no wind">
-                        <div class="frame-sprockets"></div>
-                        <div class="frame-photo"><div class="frame-num">02</div><img src="src/res/2.webp" alt="Still water" loading="lazy" /></div>
-                        <div class="frame-sprockets"></div>
-                        <div class="frame-caption">Still water, no wind</div>
-                    </div>
-                    <div class="frame-item clickable-img" data-src="src/res/3.jpg" data-caption="03 — Light through cathedral glass">
-                        <div class="frame-sprockets"></div>
-                        <div class="frame-photo"><div class="frame-num">03</div><img src="src/res/3.jpg" alt="Cathedral light" loading="lazy" /></div>
-                        <div class="frame-sprockets"></div>
-                        <div class="frame-caption">Lights of heaven</div>
-                    </div>
-                    <div class="frame-item clickable-img" data-src="src/res/4.webp" data-caption="04 — Open road, no destination">
-                        <div class="frame-sprockets"></div>
-                        <div class="frame-photo"><div class="frame-num">04</div><img src="src/res/4.webp" alt="Open road" loading="lazy" /></div>
-                        <div class="frame-sprockets"></div>
-                        <div class="frame-caption">Sunset in summer</div>
-                    </div>
-                    <div class="frame-item clickable-img" data-src="src/res/5.webp" data-caption="05 — City lights at 3am">
-                        <div class="frame-sprockets"></div>
-                        <div class="frame-photo"><div class="frame-num">05</div><img src="src/res/5.webp" alt="City at night" loading="lazy" /></div>
-                        <div class="frame-sprockets"></div>
-                        <div class="frame-caption">Peace at the days end</div>
-                    </div>
-                    <div class="frame-item clickable-img" data-src="src/res/6.webp" data-caption="06 — Fog over the bridge">
-                        <div class="frame-sprockets"></div>
-                        <div class="frame-photo"><div class="frame-num">06</div><img src="src/res/6.webp" alt="Foggy bridge" loading="lazy" /></div>
-                        <div class="frame-sprockets"></div>
-                        <div class="frame-caption">Endless blue</div>
-                    </div>
-                    <div class="frame-item clickable-img" data-src="src/res/7.webp" data-caption="07 — Empty stairwell echo">
-                        <div class="frame-sprockets"></div>
-                        <div class="frame-photo"><div class="frame-num">07</div><img src="src/res/7.webp" alt="Stairwell" loading="lazy" /></div>
-                        <div class="frame-sprockets"></div>
-                        <div class="frame-caption">No boundaries</div>
-                    </div>
-                    <div class="frame-item clickable-img" data-src="src/res/8.webp" data-caption="08 — Neon reflection in rain">
-                        <div class="frame-sprockets"></div>
-                        <div class="frame-photo"><div class="frame-num">08</div><img src="src/res/8.webp" alt="Neon rain" loading="lazy" /></div>
-                        <div class="frame-sprockets"></div>
-                        <div class="frame-caption">Peaceful sea before a storm</div>
-                    </div>
-                    <div class="frame-item wide clickable-img" data-src="src/res/9.webp" data-caption="09 — Wide desert horizon">
-                        <div class="frame-sprockets"></div>
-                        <div class="frame-photo"><div class="frame-num">09</div><img src="src/res/9.webp" alt="Desert horizon" loading="lazy" /></div>
-                        <div class="frame-sprockets"></div>
-                        <div class="frame-caption">City Skyline </div>
-                    </div>
-                    <div class="frame-item clickable-img" data-src="src/res/10.webp" data-caption="10 — Rust and peeling paint">
-                        <div class="frame-sprockets"></div>
-                        <div class="frame-photo"><div class="frame-num">10</div><img src="src/res/10.webp" alt="Rust texture" loading="lazy" /></div>
-                        <div class="frame-sprockets"></div>
-                        <div class="frame-caption">Snowy mountains</div>
-                    </div>
+            <div class="frame-grid">
+                <div class="frame-cell featured clickable-img" data-src="src/res/1.jpg" data-caption="01 — Urban geometry at dusk">
+                    <img src="src/res/1.jpg" alt="Urban geometry" loading="lazy" />
+                    <div class="frame-num">01</div>
+                    <div class="frame-overlay"><p class="frame-caption">Trees rising towards the endless sky</p></div>
+                </div>
+                <div class="frame-cell clickable-img" data-src="src/res/2.webp" data-caption="02 — Still water, no wind">
+                    <img src="src/res/2.webp" alt="Still water" loading="lazy" />
+                    <div class="frame-num">02</div>
+                    <div class="frame-overlay"><p class="frame-caption">Still water, no wind</p></div>
+                </div>
+                <div class="frame-cell clickable-img" data-src="src/res/3.jpg" data-caption="03 — Light through cathedral glass">
+                    <img src="src/res/3.jpg" alt="Cathedral light" loading="lazy" />
+                    <div class="frame-num">03</div>
+                    <div class="frame-overlay"><p class="frame-caption">Lights of heaven</p></div>
+                </div>
+                <div class="frame-cell clickable-img" data-src="src/res/4.webp" data-caption="04 — Open road, no destination">
+                    <img src="src/res/4.webp" alt="Open road" loading="lazy" />
+                    <div class="frame-num">04</div>
+                    <div class="frame-overlay"><p class="frame-caption">Sunset in summer</p></div>
+                </div>
+                <div class="frame-cell clickable-img" data-src="src/res/5.webp" data-caption="05 — City lights at 3am">
+                    <img src="src/res/5.webp" alt="City at night" loading="lazy" />
+                    <div class="frame-num">05</div>
+                    <div class="frame-overlay"><p class="frame-caption">Peace at the days end</p></div>
+                </div>
+                <div class="frame-cell clickable-img" data-src="src/res/6.webp" data-caption="06 — Fog over the bridge">
+                    <img src="src/res/6.webp" alt="Foggy bridge" loading="lazy" />
+                    <div class="frame-num">06</div>
+                    <div class="frame-overlay"><p class="frame-caption">Endless blue</p></div>
+                </div>
+                <div class="frame-cell clickable-img" data-src="src/res/7.webp" data-caption="07 — Empty stairwell echo">
+                    <img src="src/res/7.webp" alt="Stairwell" loading="lazy" />
+                    <div class="frame-num">07</div>
+                    <div class="frame-overlay"><p class="frame-caption">No boundaries</p></div>
+                </div>
+                <div class="frame-cell clickable-img" data-src="src/res/8.webp" data-caption="08 — Neon reflection in rain">
+                    <img src="src/res/8.webp" alt="Neon rain" loading="lazy" />
+                    <div class="frame-num">08</div>
+                    <div class="frame-overlay"><p class="frame-caption">Peaceful sea before a storm</p></div>
+                </div>
+                <div class="frame-cell featured clickable-img" data-src="src/res/9.webp" data-caption="09 — Wide desert horizon">
+                    <img src="src/res/9.webp" alt="Desert horizon" loading="lazy" />
+                    <div class="frame-num">09</div>
+                    <div class="frame-overlay"><p class="frame-caption">City Skyline</p></div>
+                </div>
+                <div class="frame-cell clickable-img" data-src="src/res/10.webp" data-caption="10 — Rust and peeling paint">
+                    <img src="src/res/10.webp" alt="Rust texture" loading="lazy" />
+                    <div class="frame-num">10</div>
+                    <div class="frame-overlay"><p class="frame-caption">Snowy mountains</p></div>
                 </div>
             </div>
         </section>

@@ -90,6 +90,31 @@ button { font: inherit; }
     box-shadow: 0 0 18px var(--red-glow-strong); pointer-events: none;
 }
 
+/* ===== preloader — the archive "opening" ===== */
+body.preloading { overflow: hidden; height: 100vh; }
+#preloader { position: fixed; inset: 0; z-index: 10050; pointer-events: none; }
+body.preloading #preloader { pointer-events: all; }
+.preloader-panel { position: absolute; left: 0; right: 0; height: 51%; background: var(--bg); z-index: 1; }
+.preloader-panel-top { top: 0; }
+.preloader-panel-bottom { bottom: 0; }
+.preloader-inner {
+    position: absolute; inset: 0; z-index: 2; display: flex; flex-direction: column;
+    align-items: center; justify-content: center; gap: 1.15rem;
+}
+.preloader-mark {
+    width: 34px; height: 34px; display: flex; align-items: center; justify-content: center;
+    background: var(--red); color: var(--bg); font-family: var(--display); font-size: 1.35rem;
+    border-radius: 3px; box-shadow: 0 0 22px var(--red-glow-strong);
+}
+.preloader-label { font-family: var(--mono); font-size: .62rem; letter-spacing: .34em; text-transform: uppercase; color: var(--ink); }
+.preloader-barwrap { width: 210px; height: 1px; background: var(--line-bright); overflow: hidden; }
+.preloader-bar { width: 0%; height: 100%; background: var(--red-bright); box-shadow: 0 0 10px var(--red-glow-strong); }
+.preloader-pct { font-family: var(--mono); font-size: .6rem; letter-spacing: .15em; color: var(--paper); min-width: 3ch; text-align: center; }
+@media (prefers-reduced-motion: reduce) {
+    #preloader { display: none !important; }
+    body.preloading { overflow: visible !important; height: auto !important; }
+}
+
 #cursor-glow {
     position: fixed; pointer-events: none; z-index: 9997; top: 0; left: 0;
     width: 90px; height: 90px; border-radius: 50%;
@@ -229,13 +254,13 @@ main { position: relative; z-index: 2; padding-top: var(--nav-h); }
     position: absolute; top: 2.2rem; font-family: var(--mono); font-size: .58rem;
     letter-spacing: .2em; text-transform: uppercase; color: var(--ink);
     border-bottom: 1px solid var(--line-bright); padding-bottom: .5rem;
-    opacity: 0;
+    opacity: 0; transform: translateY(14px);
 }
 .hero-tag-left { left: 2rem; }
 .hero-tag-right { right: 2rem; color: var(--red-bright); }
 .hero-kicker {
     font-family: var(--mono); font-size: .64rem; letter-spacing: .32em; text-transform: uppercase;
-    color: var(--red-bright); margin-bottom: 1.8rem; opacity: 0;
+    color: var(--red-bright); margin-bottom: 1.8rem; opacity: 0; transform: translateY(18px);
 }
 .hero-title-wrap { position: relative; }
 .hero-title {
@@ -260,7 +285,7 @@ main { position: relative; z-index: 2; padding-top: var(--nav-h); }
 }
 .hero-subtitle {
     font-family: var(--mono); font-size: .7rem; color: var(--ink); letter-spacing: .1em;
-    max-width: 480px; line-height: 2; min-height: 3em; opacity: 0;
+    max-width: 480px; line-height: 2; min-height: 3em; opacity: 0; transform: translateY(16px);
 }
 .hero-subtitle .cursor-blink {
     display: inline-block; width: 1px; height: .9em; background: var(--red-bright); margin-left: 2px;
@@ -269,7 +294,7 @@ main { position: relative; z-index: 2; padding-top: var(--nav-h); }
 .hero-subtitle .cursor-blink.hidden { display: none; }
 @keyframes blink { 0%,100%{opacity:1;} 50%{opacity:0;} }
 .hero-scroll-hint {
-    position: absolute; bottom: 2.4rem; left: 50%; transform: translateX(-50%);
+    position: absolute; bottom: 2.4rem; left: 50%; transform: translateX(-50%) translateY(12px);
     background: none; border: none; cursor: pointer; display: flex; flex-direction: column;
     align-items: center; gap: .5rem; font-family: var(--mono); font-size: .52rem; letter-spacing: .3em;
     text-transform: uppercase; color: var(--ink); opacity: 0;
@@ -378,61 +403,45 @@ main { position: relative; z-index: 2; padding-top: var(--nav-h); }
     .log-card.featured { grid-column: span 1; }
 }
 
-/* ===== frames / gallery ===== */
-.filmstrip-region { position: relative; }
-.filmstrip-wrap {
-    overflow-x: auto; overflow-y: hidden; scroll-snap-type: x proximity; padding-bottom: .6rem;
-    -webkit-overflow-scrolling: touch;
+/* ===== frames / gallery — simple contact sheet =====
+   Was a horizontal filmstrip, then an asymmetric mosaic with a
+   per-tile parallax layer — the parallax (ten separate scroll-scrubbed
+   listeners) was the main source of the scroll lag, so this version
+   goes back to something plain: one uniform grid, reusing the same
+   hairline-grid language as .log-grid / .index-grid. Hover states are
+   CSS-only (no JS, no per-frame cost); the only animation is the
+   single one-time entrance handled in interactions.js. */
+.frame-grid {
+    display: grid; grid-template-columns: repeat(5, 1fr); gap: 1px;
+    background: var(--line); border: 1px solid var(--line);
 }
-.filmstrip-wrap::-webkit-scrollbar { height: 5px; }
-.filmstrip-wrap::-webkit-scrollbar-thumb { background: var(--line-bright); border-radius: 3px; }
-.filmstrip { display: flex; gap: 1.2rem; width: max-content; padding: .3rem .2rem; }
-.frame-item {
-    scroll-snap-align: start; width: 260px; flex: none; cursor: zoom-in; user-select: none;
-    background: var(--bg2); border: 1px solid var(--line); position: relative;
+.frame-cell {
+    position: relative; aspect-ratio: 1 / 1; overflow: hidden; cursor: zoom-in;
+    user-select: none; background: var(--bg2);
 }
-.frame-item.wide { width: 400px; }
-.frame-sprockets {
-    height: 12px; background-color: var(--bg4);
-    background-image: radial-gradient(circle, var(--bg) 0 3px, transparent 3.2px);
-    background-size: 18px 100%; background-position: 9px center; background-repeat: repeat-x;
+.frame-cell img {
+    width: 100%; height: 100%; object-fit: cover; filter: grayscale(80%) brightness(.5);
+    transition: transform .5s var(--ease-out), filter .45s ease;
 }
-.frame-photo { position: relative; overflow: hidden; height: 300px; }
-.frame-wipe { position: absolute; inset: 0; background: var(--bg2); z-index: 3; transform-origin: left; }
-.frame-photo img {
-    width: 100%; height: 100%; object-fit: cover; filter: grayscale(78%) brightness(.48);
-    transition: transform .55s var(--ease-out), filter .45s ease;
-}
-.frame-item:hover .frame-photo img { transform: scale(1.06); filter: grayscale(15%) brightness(.9); }
-.frame-item:hover .frame-photo::after { opacity: 1; }
-.frame-photo::after {
-    content: '↗ view'; position: absolute; bottom: .6rem; right: .6rem; z-index: 2; font-family: var(--mono);
-    font-size: .48rem; letter-spacing: .12em; color: var(--paper); text-transform: uppercase;
-    background: rgba(0,0,0,.7); padding: .25rem .55rem; border: 1px solid var(--line-bright);
-    opacity: 0; transition: opacity var(--dur-base);
-}
+.frame-cell:hover img { transform: scale(1.06); filter: grayscale(8%) brightness(.92); }
+.frame-cell.featured { box-shadow: inset 0 2px 0 0 var(--red); }
 .frame-num {
     position: absolute; top: .6rem; left: .6rem; z-index: 2; font-family: var(--mono); font-size: .5rem;
     color: var(--red-bright); letter-spacing: .1em; text-shadow: 0 1px 6px rgba(0,0,0,.95);
 }
+.frame-overlay {
+    position: absolute; inset: 0; z-index: 1; display: flex; align-items: flex-end; padding: .8rem .85rem;
+    background: linear-gradient(to top, rgba(6,5,5,.9) 0%, rgba(6,5,5,.3) 48%, transparent 78%);
+    opacity: 0; transition: opacity var(--dur-base) ease;
+}
+.frame-cell:hover .frame-overlay { opacity: 1; }
 .frame-caption {
-    padding: .75rem .9rem .85rem; font-family: var(--mono); font-size: .53rem; letter-spacing: .04em;
-    color: var(--ink); line-height: 1.5;
+    font-family: var(--mono); font-size: .53rem; letter-spacing: .04em; color: var(--paper); line-height: 1.5;
 }
-.filmstrip-nav {
-    position: absolute; top: 45%; transform: translateY(-50%); background: rgba(10,9,8,.82);
-    border: 1px solid var(--line-bright); color: var(--paper); width: 2.7rem; height: 2.7rem;
-    display: flex; align-items: center; justify-content: center; cursor: pointer; z-index: 3;
-    transition: all var(--dur-fast) ease; font-size: .85rem; border-radius: 50%;
-}
-.filmstrip-nav:hover { border-color: var(--red-bright); color: var(--red-bright); }
-.filmstrip-prev { left: -1.2rem; }
-.filmstrip-next { right: -1.2rem; }
-@media (max-width: 860px) {
-    .filmstrip-nav { display: none; }
-    .frame-item { width: 210px; }
-    .frame-item.wide { width: 300px; }
-    .frame-photo { height: 240px; }
+@media (max-width: 860px) { .frame-grid { grid-template-columns: repeat(3, 1fr); } }
+@media (max-width: 560px) {
+    .frame-grid { grid-template-columns: repeat(2, 1fr); }
+    .frame-overlay { opacity: 1; background: linear-gradient(to top, rgba(6,5,5,.85) 0%, transparent 65%); }
 }
 
 /* ===== signal / whispers ===== */
@@ -548,38 +557,40 @@ footer { border-top: 1px solid var(--line); }
    The .reveal class on sections is kept only as a semantic marker for
    "this section animates in on first scroll" — it no longer hides
    anything itself. Each section's own children carry their own hidden
-   state below, animated to rest by the sectionEntrances() timelines in
-   interactions.js so every section reads as an authored moment rather
-   than one repeated fade. */
+   state below (offset + translucent — transform/opacity only, no
+   filter: blur, which is expensive to animate across many elements
+   and was contributing to scroll lag), animated to rest by the
+   sectionEntrances() timelines in interactions.js so every section
+   reads as an authored moment rather than one repeated fade. */
 .reveal { opacity: 1; transform: none; }
 
-#dossier .dossier-text { opacity: 0; transform: translateX(-46px); }
-#dossier .dossier-visual { opacity: 0; transform: translateX(46px) rotate(6deg); }
+#dossier .dossier-text { opacity: 0; transform: translateX(-64px); }
+#dossier .dossier-visual { opacity: 0; transform: translateX(64px) rotate(7deg); }
 
-#log > .eyebrow, #log > .section-note { opacity: 0; transform: translateY(22px); }
-#log .log-card { opacity: 0; transform: translateY(26px) scale(.95); }
+#log > .eyebrow, #log > .section-note { opacity: 0; transform: translateY(30px); }
+#log .log-card { opacity: 0; transform: translateY(38px) scale(.93); }
 
-#frames > .eyebrow, #frames > .section-note { opacity: 0; transform: translateY(22px); }
-#frames .filmstrip-nav { opacity: 0; }
+#frames > .eyebrow, #frames > .section-note { opacity: 0; transform: translateY(30px); }
+#frames .frame-cell { opacity: 0; transform: translateY(24px); }
 
-#signal > .eyebrow { opacity: 0; transform: translateY(22px); }
-#signal .signal-eq { opacity: 0; transform: scale(.8); }
-#signal .whisper-container { opacity: 0; transform: translateY(18px); }
-#signal .whisper-leds { opacity: 0; transform: translateY(14px); }
+#signal > .eyebrow { opacity: 0; transform: translateY(30px); }
+#signal .signal-eq { opacity: 0; transform: scale(.7); }
+#signal .whisper-container { opacity: 0; transform: translateY(26px); }
+#signal .whisper-leds { opacity: 0; transform: translateY(18px); }
 
-#notes > .eyebrow { opacity: 0; transform: translateY(22px); }
-#notes .notes-tab { opacity: 0; transform: translateY(-16px); }
-#notes .notes-panel { opacity: 0; transform: translateX(-36px); }
+#notes > .eyebrow { opacity: 0; transform: translateY(30px); }
+#notes .notes-tab { opacity: 0; transform: translateY(-20px); }
+#notes .notes-panel { opacity: 0; transform: translateX(-56px); }
 
-#index > .eyebrow { opacity: 0; transform: translateY(22px); }
-#index .index-cell { opacity: 0; transform: translateY(26px) scale(.95); }
+#index > .eyebrow { opacity: 0; transform: translateY(30px); }
+#index .index-cell { opacity: 0; transform: translateY(38px) scale(.93); }
 
-footer .footer-inner { opacity: 0; transform: translateY(20px); }
+footer .footer-inner { opacity: 0; transform: translateY(26px); }
 
 @media (prefers-reduced-motion: reduce) {
     #dossier .dossier-text, #dossier .dossier-visual,
     #log > .eyebrow, #log > .section-note, #log .log-card,
-    #frames > .eyebrow, #frames > .section-note, #frames .filmstrip-nav,
+    #frames > .eyebrow, #frames > .section-note, #frames .frame-cell,
     #signal > .eyebrow, #signal .signal-eq, #signal .whisper-container, #signal .whisper-leds,
     #notes > .eyebrow, #notes .notes-tab, #notes .notes-panel,
     #index > .eyebrow, #index .index-cell,

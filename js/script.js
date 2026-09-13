@@ -10,7 +10,7 @@
         glow.style.transform = `translate(${e.clientX}px, ${e.clientY}px) translate(-50%, -50%)`;
     });
     const hoverEls = document.querySelectorAll(
-        'a, button, .clickable-img, .index-cell, .notes-tab, .frame-item, .log-card, .read-more-btn, .copyable, .whisper-dot, .card-scene'
+        'a, button, .clickable-img, .index-cell, .notes-tab, .frame-cell, .log-card, .read-more-btn, .copyable, .whisper-dot, .card-scene'
     );
     hoverEls.forEach(el => {
         el.addEventListener('mouseenter', () => glow.classList.add('hover'));
@@ -154,7 +154,7 @@
 })();
 
 (function sparkBurst() {
-    document.querySelectorAll('.frame-item, .clickable-img').forEach(el => {
+    document.querySelectorAll('.frame-cell, .clickable-img').forEach(el => {
         let burstLayer = el.querySelector('.mark-burst-layer');
         if (!burstLayer) {
             burstLayer = document.createElement('div');
@@ -527,29 +527,4 @@
     audio.volume = 0.8;
     volBar.value = 0.8;
     loadTrack(curTrack);
-})();
-
-(function filmstripControls() {
-    const wrap = document.getElementById('filmstrip-wrap');
-    const prev = document.getElementById('filmstrip-prev');
-    const next = document.getElementById('filmstrip-next');
-    if (!wrap || !prev || !next) return;
-    prev.addEventListener('click', () => wrap.scrollBy({ left: -320, behavior: 'smooth' }));
-    next.addEventListener('click', () => wrap.scrollBy({ left: 320, behavior: 'smooth' }));
-
-    let isDown = false, startX, scrollLeft;
-    wrap.addEventListener('mousedown', (e) => {
-        isDown = true;
-        wrap.style.cursor = 'grabbing';
-        startX = e.pageX - wrap.offsetLeft;
-        scrollLeft = wrap.scrollLeft;
-    });
-    window.addEventListener('mouseup', () => { isDown = false; wrap.style.cursor = ''; });
-    wrap.addEventListener('mouseleave', () => { isDown = false; wrap.style.cursor = ''; });
-    wrap.addEventListener('mousemove', (e) => {
-        if (!isDown) return;
-        e.preventDefault();
-        const x = e.pageX - wrap.offsetLeft;
-        wrap.scrollLeft = scrollLeft - (x - startX) * 1.4;
-    });
 })();
