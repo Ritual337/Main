@@ -13,7 +13,7 @@ export async function onRequest(context) {
   }
   const token = authHeader.slice(7);
   const payload = await verifyJWT(token, env.JWT_SECRET);
-  if (!payload || payload.role !== 'admin') {
+  if (!payload || payload.role !== 'gallery') {
     return new Response(JSON.stringify({ error: 'Unauthorized' }), { status: 401 });
   }
 

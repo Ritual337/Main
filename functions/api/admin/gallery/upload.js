@@ -7,18 +7,16 @@ export async function onRequest(context) {
     return new Response('Method not allowed', { status: 405 });
   }
 
-  // Verify JWT token
   const authHeader = request.headers.get('Authorization');
   if (!authHeader || !authHeader.startsWith('Bearer ')) {
     return new Response(JSON.stringify({ error: 'Unauthorized' }), { status: 401 });
   }
   const token = authHeader.slice(7);
   const payload = await verifyJWT(token, env.JWT_SECRET);
-  if (!payload || payload.role !== 'admin') {
+  if (!payload || payload.role !== 'gallery') {
     return new Response(JSON.stringify({ error: 'Unauthorized' }), { status: 401 });
   }
 
-  // Parse form data
   const formData = await request.formData();
   const file = formData.get('file');
   const caption = formData.get('caption') || '';
@@ -27,18 +25,14 @@ export async function onRequest(context) {
     return new Response(JSON.stringify({ error: 'No file provided' }), { status: 400 });
   }
 
-  // Convert file to base64 data URI
   const buffer = await file.arrayBuffer();
   const base64 = Buffer.from(buffer).toString('base64');
   const dataURI = `data:${file.type};base64,${base64}`;
 
   const cloudName = env.CLOUDINARY_CLOUD_NAME;
   const uploadPreset = 'ritual_gallery_unsigned';
-
-  // Build Cloudinary unsigned upload URL
   const uploadUrl = `https://api.cloudinary.com/v1_1/${cloudName}/image/upload`;
 
-  // Prepare form data for Cloudinary - ONLY file + upload_preset
   const cloudinaryForm = new FormData();
   cloudinaryForm.append('file', dataURI);
   cloudinaryForm.append('upload_preset', uploadPreset);
@@ -55,7 +49,6 @@ export async function onRequest(context) {
       throw new Error(result.error?.message || 'Cloudinary upload failed');
     }
 
-    // Save to D1
     const filename = result.public_id + '.' + result.format;
     const id = 'img_' + Date.now().toString(36) + '_' + Math.random().toString(36).slice(2, 6);
     const uploaded_at = Date.now();
