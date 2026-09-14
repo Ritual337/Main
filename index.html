@@ -52,6 +52,7 @@
     <div id="scroll-progress"></div>
     <div id="cursor-glow"></div>
     <div class="ripple-container" id="ripple-container"></div>
+    <div class="wipe-scan" id="wipe-scan"></div>
 
     <nav class="nav-bar" id="nav-bar">
         <div class="nav-inner">
@@ -208,60 +209,155 @@
             </div>
         </section>
 
+        <!-- ============================================================
+             FRAMES — redesigned
+             Asymmetric 4-column editorial mosaic (hairline gutters, same
+             language as .log-grid / .index-grid) + a small filter strip.
+             All hover motion is CSS-only; filtering is a single staggered
+             fade handled in script.js so nothing runs per-frame.
+             ============================================================ -->
         <section id="frames" class="section reveal">
             <div class="eyebrow"><span class="eyebrow-num">03</span><span class="eyebrow-text">Frames</span><span class="eyebrow-line"></span></div>
             <p class="section-note">A contact sheet of things worth stopping for.</p>
-            <div class="frame-grid">
-                <div class="frame-cell featured clickable-img" data-src="src/res/1.jpg" data-caption="01 — Urban geometry at dusk">
-                    <img src="src/res/1.jpg" alt="Urban geometry" loading="lazy" />
+
+            <div class="frame-filters" id="frame-filters" role="group" aria-label="Filter frames">
+                <button class="frame-filter active" type="button" data-filter="all" aria-pressed="true">All <em>10</em></button>
+                <button class="frame-filter" type="button" data-filter="nature" aria-pressed="false">Nature <em>4</em></button>
+                <button class="frame-filter" type="button" data-filter="urban" aria-pressed="false">Urban <em>6</em></button>
+            </div>
+
+            <div class="frame-grid" id="frame-grid">
+
+                <figure class="frame-cell featured frame-wide frame-tall clickable-img"
+                        data-tags="nature"
+                        data-src="src/res/1.jpg"
+                        data-caption="01 — Trees rising towards the endless sky">
+                    <img src="src/res/1.jpg" alt="Trees rising towards the endless sky" loading="lazy" />
                     <div class="frame-num">01</div>
-                    <div class="frame-overlay"><p class="frame-caption">Trees rising towards the endless sky</p></div>
-                </div>
-                <div class="frame-cell clickable-img" data-src="src/res/2.webp" data-caption="02 — Still water, no wind">
+                    <figcaption class="frame-overlay">
+                        <span class="frame-bar"></span>
+                        <span class="frame-cat">Nature</span>
+                        <p class="frame-caption">Trees rising towards the endless sky</p>
+                    </figcaption>
+                </figure>
+
+                <figure class="frame-cell clickable-img"
+                        data-tags="nature"
+                        data-src="src/res/2.webp"
+                        data-caption="02 — Still water, no wind">
                     <img src="src/res/2.webp" alt="Still water" loading="lazy" />
                     <div class="frame-num">02</div>
-                    <div class="frame-overlay"><p class="frame-caption">Still water, no wind</p></div>
-                </div>
-                <div class="frame-cell clickable-img" data-src="src/res/3.jpg" data-caption="03 — Light through cathedral glass">
+                    <figcaption class="frame-overlay">
+                        <span class="frame-bar"></span>
+                        <span class="frame-cat">Nature</span>
+                        <p class="frame-caption">Still water, no wind</p>
+                    </figcaption>
+                </figure>
+
+                <figure class="frame-cell clickable-img"
+                        data-tags="urban"
+                        data-src="src/res/3.jpg"
+                        data-caption="03 — Lights of heaven">
                     <img src="src/res/3.jpg" alt="Cathedral light" loading="lazy" />
                     <div class="frame-num">03</div>
-                    <div class="frame-overlay"><p class="frame-caption">Lights of heaven</p></div>
-                </div>
-                <div class="frame-cell clickable-img" data-src="src/res/4.webp" data-caption="04 — Open road, no destination">
+                    <figcaption class="frame-overlay">
+                        <span class="frame-bar"></span>
+                        <span class="frame-cat">Urban</span>
+                        <p class="frame-caption">Lights of heaven</p>
+                    </figcaption>
+                </figure>
+
+                <figure class="frame-cell clickable-img"
+                        data-tags="nature"
+                        data-src="src/res/4.webp"
+                        data-caption="04 — Sunset in summer">
                     <img src="src/res/4.webp" alt="Open road" loading="lazy" />
                     <div class="frame-num">04</div>
-                    <div class="frame-overlay"><p class="frame-caption">Sunset in summer</p></div>
-                </div>
-                <div class="frame-cell clickable-img" data-src="src/res/5.webp" data-caption="05 — City lights at 3am">
+                    <figcaption class="frame-overlay">
+                        <span class="frame-bar"></span>
+                        <span class="frame-cat">Nature</span>
+                        <p class="frame-caption">Sunset in summer</p>
+                    </figcaption>
+                </figure>
+
+                <figure class="frame-cell clickable-img"
+                        data-tags="urban"
+                        data-src="src/res/5.webp"
+                        data-caption="05 — Peace at the days end">
                     <img src="src/res/5.webp" alt="City at night" loading="lazy" />
                     <div class="frame-num">05</div>
-                    <div class="frame-overlay"><p class="frame-caption">Peace at the days end</p></div>
-                </div>
-                <div class="frame-cell clickable-img" data-src="src/res/6.webp" data-caption="06 — Fog over the bridge">
+                    <figcaption class="frame-overlay">
+                        <span class="frame-bar"></span>
+                        <span class="frame-cat">Urban</span>
+                        <p class="frame-caption">Peace at the days end</p>
+                    </figcaption>
+                </figure>
+
+                <figure class="frame-cell featured frame-wide clickable-img"
+                        data-tags="urban"
+                        data-src="src/res/6.webp"
+                        data-caption="06 — Endless blue">
                     <img src="src/res/6.webp" alt="Foggy bridge" loading="lazy" />
                     <div class="frame-num">06</div>
-                    <div class="frame-overlay"><p class="frame-caption">Endless blue</p></div>
-                </div>
-                <div class="frame-cell clickable-img" data-src="src/res/7.webp" data-caption="07 — Empty stairwell echo">
+                    <figcaption class="frame-overlay">
+                        <span class="frame-bar"></span>
+                        <span class="frame-cat">Urban</span>
+                        <p class="frame-caption">Endless blue</p>
+                    </figcaption>
+                </figure>
+
+                <figure class="frame-cell clickable-img"
+                        data-tags="urban"
+                        data-src="src/res/7.webp"
+                        data-caption="07 — No boundaries">
                     <img src="src/res/7.webp" alt="Stairwell" loading="lazy" />
                     <div class="frame-num">07</div>
-                    <div class="frame-overlay"><p class="frame-caption">No boundaries</p></div>
-                </div>
-                <div class="frame-cell clickable-img" data-src="src/res/8.webp" data-caption="08 — Neon reflection in rain">
+                    <figcaption class="frame-overlay">
+                        <span class="frame-bar"></span>
+                        <span class="frame-cat">Urban</span>
+                        <p class="frame-caption">No boundaries</p>
+                    </figcaption>
+                </figure>
+
+                <figure class="frame-cell clickable-img"
+                        data-tags="urban"
+                        data-src="src/res/8.webp"
+                        data-caption="08 — Peaceful sea before a storm">
                     <img src="src/res/8.webp" alt="Neon rain" loading="lazy" />
                     <div class="frame-num">08</div>
-                    <div class="frame-overlay"><p class="frame-caption">Peaceful sea before a storm</p></div>
-                </div>
-                <div class="frame-cell featured clickable-img" data-src="src/res/9.webp" data-caption="09 — Wide desert horizon">
+                    <figcaption class="frame-overlay">
+                        <span class="frame-bar"></span>
+                        <span class="frame-cat">Urban</span>
+                        <p class="frame-caption">Peaceful sea before a storm</p>
+                    </figcaption>
+                </figure>
+
+                <figure class="frame-cell featured frame-wide clickable-img"
+                        data-tags="urban"
+                        data-src="src/res/9.webp"
+                        data-caption="09 — City Skyline">
                     <img src="src/res/9.webp" alt="Desert horizon" loading="lazy" />
                     <div class="frame-num">09</div>
-                    <div class="frame-overlay"><p class="frame-caption">City Skyline</p></div>
-                </div>
-                <div class="frame-cell clickable-img" data-src="src/res/10.webp" data-caption="10 — Rust and peeling paint">
+                    <figcaption class="frame-overlay">
+                        <span class="frame-bar"></span>
+                        <span class="frame-cat">Urban</span>
+                        <p class="frame-caption">City Skyline</p>
+                    </figcaption>
+                </figure>
+
+                <figure class="frame-cell frame-wide clickable-img"
+                        data-tags="nature"
+                        data-src="src/res/10.webp"
+                        data-caption="10 — Snowy mountains">
                     <img src="src/res/10.webp" alt="Rust texture" loading="lazy" />
                     <div class="frame-num">10</div>
-                    <div class="frame-overlay"><p class="frame-caption">Snowy mountains</p></div>
-                </div>
+                    <figcaption class="frame-overlay">
+                        <span class="frame-bar"></span>
+                        <span class="frame-cat">Nature</span>
+                        <p class="frame-caption">Snowy mountains</p>
+                    </figcaption>
+                </figure>
+
             </div>
         </section>
 

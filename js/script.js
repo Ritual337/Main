@@ -99,13 +99,28 @@
 (function toastSystem() {
     const stack = document.getElementById('toast-stack');
     if (!stack) return;
-    window.showToast = function (msg, dur = 2600) {
+
+    /**
+     * showToast('message')
+     * showToast('message', 4000)
+     * showToast('message', { duration: 4000, error: true })
+     */
+    window.showToast = function (msg, opts = {}) {
+        const duration = (typeof opts === 'number')
+            ? opts
+            : (opts.duration || 2800);
+
         const el = document.createElement('div');
         el.className = 'toast';
         el.textContent = msg;
         stack.appendChild(el);
+
         requestAnimationFrame(() => el.classList.add('show'));
-        setTimeout(() => { el.classList.remove('show'); setTimeout(() => el.remove(), 350); }, dur);
+
+        setTimeout(() => {
+            el.classList.remove('show');
+            setTimeout(() => el.remove(), 350);
+        }, duration);
     };
 })();
 
@@ -119,11 +134,20 @@
     const prev = document.getElementById('lightbox-prev');
     const next = document.getElementById('lightbox-next');
     if (!items.length || !lb || !img || !cap || !close || !backdrop || !prev || !next) return;
+
     let cur = 0;
 
+    const visibleItems = () => items.filter(el => !el.classList.contains('is-hidden'));
+
     function open(i) {
+        const visible = visibleItems();
+        if (!visible.length) return;
+
+        let el = items[i];
+        if (!el || el.classList.contains('is-hidden')) el = visible[0];
+        i = items.indexOf(el);
+
         cur = i;
-        const el = items[i];
         img.src = el.dataset.src;
         cap.textContent = el.dataset.caption || '';
         lb.classList.add('active');
@@ -132,25 +156,105 @@
         img.onload = () => { img.style.opacity = '1'; };
         setTimeout(() => { img.style.opacity = '1'; }, 200);
     }
+
+    function step(dir) {
+        const visible = visibleItems();
+        if (!visible.length) return;
+        let idx = visible.indexOf(items[cur]);
+        if (idx === -1) idx = 0;
+        idx = (idx + dir + visible.length) % visible.length;
+        open(items.indexOf(visible[idx]));
+    }
+
     function closeLb() {
         lb.classList.remove('active');
         document.body.classList.remove('overlay-open');
         setTimeout(() => { img.src = ''; }, 350);
     }
-    items.forEach((el, i) => el.addEventListener('click', (e) => {
+
+    items.forEach(el => el.addEventListener('click', (e) => {
         if (e.target.closest('.mark-burst-layer') && e.detail === 2) return;
-        open(i);
+        open(items.indexOf(el));
     }));
+
     close.addEventListener('click', closeLb);
     backdrop.addEventListener('click', closeLb);
-    prev.addEventListener('click', () => open((cur - 1 + items.length) % items.length));
-    next.addEventListener('click', () => open((cur + 1) % items.length));
+    prev.addEventListener('click', () => step(-1));
+    next.addEventListener('click', () => step(1));
+
     document.addEventListener('keydown', (e) => {
         if (!lb.classList.contains('active')) return;
         if (e.key === 'Escape') closeLb();
-        if (e.key === 'ArrowLeft') open((cur - 1 + items.length) % items.length);
-        if (e.key === 'ArrowRight') open((cur + 1) % items.length);
+        if (e.key === 'ArrowLeft') step(-1);
+        if (e.key === 'ArrowRight') step(1);
     });
+})();
+
+(function framesFilter() {
+    const grid = document.getElementById('frame-grid');
+    const bar = document.getElementById('frame-filters');
+    if (!grid || !bar) return;
+
+    const cells = Array.from(grid.querySelectorAll('.frame-cell'));
+    const buttons = Array.from(bar.querySelectorAll('.frame-filter'));
+    if (!cells.length || !buttons.length) return;
+
+    function apply(filter) {
+        let shown = 0;
+        cells.forEach(cell => {
+            const tags = (cell.dataset.tags || '').split(/\s+/);
+            const match = filter === 'all' || tags.includes(filter);
+
+            if (match) {
+                cell.classList.remove('is-hidden', 'filter-in');
+                void cell.offsetWidth;
+                cell.style.animationDelay = (shown * 45) + 'ms';
+                cell.classList.add('filter-in');
+                shown++;
+            } else {
+                cell.classList.remove('filter-in');
+                cell.classList.add('is-hidden');
+            }
+        });
+    }
+
+    buttons.forEach(btn => {
+        btn.addEventListener('click', () => {
+            if (btn.classList.contains('active')) return;
+            buttons.forEach(b => {
+                b.classList.remove('active');
+                b.setAttribute('aria-pressed', 'false');
+            });
+            btn.classList.add('active');
+            btn.setAttribute('aria-pressed', 'true');
+            apply(btn.dataset.filter);
+        });
+    });
+})();
+
+/* The filter strip is new markup, so interactions.js doesn't know about
+   it — give it its own one-shot entrance rather than leaving it to pop
+   in ahead of the tiles. */
+(function frameFiltersEntrance() {
+    const bar = document.getElementById('frame-filters');
+    if (!bar) return;
+    if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) return;
+
+    bar.style.opacity = '0';
+    bar.style.transform = 'translateY(18px)';
+    bar.style.transition =
+        'opacity .6s cubic-bezier(.23,1,.32,1), transform .6s cubic-bezier(.23,1,.32,1)';
+
+    const io = new IntersectionObserver((entries) => {
+        entries.forEach(en => {
+            if (!en.isIntersecting) return;
+            bar.style.opacity = '1';
+            bar.style.transform = 'none';
+            io.disconnect();
+        });
+    }, { threshold: 0.2 });
+
+    io.observe(bar);
 })();
 
 (function sparkBurst() {
@@ -328,45 +432,76 @@
 })();
 
 (function easterEggKeys() {
+    const FLICKER_MS = 5000;   // glitch + invert phase
+    const ERASE_MS   = 5000;   // page deletion phase
+
     let buf = '';
     let active = false;
 
     document.addEventListener('keydown', (e) => {
+        if (active) return;
         if (e.key.length !== 1) return;
 
         buf = (buf + e.key.toLowerCase()).slice(-6);
+        if (buf !== 'ritual') return;
 
-        if (buf === 'ritual' && !active) {
-            active = true;
-            buf = '';
+        active = true;
+        buf = '';
 
-            // Toast stays for 5 seconds
-            window.showToast?.('you found it. hi.', { duration: 5000 });
+        /* ---- phase 1: discovery ---- */
+        window.showToast?.('you found it. hi.', { duration: FLICKER_MS });
+        document.body.classList.add('ritual-glitch');
 
-            document.body.classList.add('ritual-glitch');
+        const start = Date.now();
+        const flicker = setInterval(() => {
+            document.body.style.filter =
+                Math.random() > 0.5 ? 'invert(1)' : 'none';
+            document.body.style.transform =
+                Math.random() > 0.7
+                    ? `translate(${Math.random() * 8 - 4}px, ${Math.random() * 8 - 4}px)`
+                    : 'none';
 
-            const start = Date.now();
+            if (Date.now() - start >= FLICKER_MS) {
+                clearInterval(flicker);
+                document.body.style.filter = 'none';
+                document.body.style.transform = 'none';
+                document.body.classList.remove('ritual-glitch');
+                beginErase();
+            }
+        }, 60);
 
-            // Fast flickering + glitch for 5 seconds
-            const flicker = setInterval(() => {
-                document.body.style.filter =
-                    Math.random() > 0.5 ? 'invert(1)' : 'none';
+        /* ---- phase 2: erasure ---- */
+        function beginErase() {
+            const scan = document.getElementById('wipe-scan');
+            if (scan) {
+                scan.classList.remove('active');
+                void scan.offsetWidth;        // restart the sweep cleanly
+                scan.classList.add('active');
+            }
 
-                document.body.style.transform =
-                    Math.random() > 0.7
-                        ? `translate(${Math.random() * 8 - 4}px, ${Math.random() * 8 - 4}px)`
-                        : 'none';
+            // every top-level node, in document order, except the scan line
+            const targets = Array.from(document.body.children)
+                .filter(el => el.id !== 'wipe-scan');
 
-                if (Date.now() - start >= 5000) {
-                    clearInterval(flicker);
+            const step = ERASE_MS / Math.max(targets.length, 1);
 
-                    document.body.style.filter = 'none';
-                    document.body.style.transform = 'none';
-                    document.body.classList.remove('ritual-glitch');
+            targets.forEach((el, i) => {
+                setTimeout(() => {
+                    el.classList.add('erase-target');
+                    void el.offsetWidth;      // force style flush so it transitions
+                    el.classList.add('erased');
+                }, i * step);
+            });
 
-                    active = false;
-                }
-            }, 60);
+            /* ---- phase 3: the blank page ---- */
+            setTimeout(() => {
+                document.body.innerHTML = '';
+                document.body.removeAttribute('style');
+                document.body.style.cssText = 'background:#000;margin:0;cursor:default;';
+                document.documentElement.style.cssText = 'background:#000;';
+                document.title = '';
+                window.scrollTo(0, 0);
+            }, ERASE_MS + 500);
         }
     });
 })();

@@ -435,45 +435,176 @@ main { position: relative; z-index: 2; padding-top: var(--nav-h); }
     .log-card.featured { grid-column: span 1; }
 }
 
-/* ===== frames / gallery — simple contact sheet =====
-   Was a horizontal filmstrip, then an asymmetric mosaic with a
-   per-tile parallax layer — the parallax (ten separate scroll-scrubbed
-   listeners) was the main source of the scroll lag, so this version
-   goes back to something plain: one uniform grid, reusing the same
-   hairline-grid language as .log-grid / .index-grid. Hover states are
-   CSS-only (no JS, no per-frame cost); the only animation is the
-   single one-time entrance handled in interactions.js. */
+/* ===== frames — editorial mosaic =====================================
+   Four-column hairline grid (same language as .log-grid / .index-grid)
+   with two span modifiers for rhythm. Hover states are CSS-only.
+   Filtering is a single staggered fade driven from script.js — no
+   per-frame scroll work, no per-tile listeners. */
+   .frame-filters {
+    display: flex;
+    flex-wrap: wrap;
+    gap: .6rem;
+    margin-bottom: 1.6rem;
+}
+.frame-filter {
+    display: inline-flex;
+    align-items: center;
+    gap: .5rem;
+    font-family: var(--mono);
+    font-size: .58rem;
+    letter-spacing: .14em;
+    text-transform: uppercase;
+    color: var(--ink);
+    background: var(--bg2);
+    border: 1px solid var(--line);
+    padding: .62rem 1rem;
+    border-radius: 3px;
+    cursor: pointer;
+    transition: color var(--dur-base), border-color var(--dur-base), background var(--dur-base);
+}
+.frame-filter em {
+    font-style: normal;
+    font-size: .5rem;
+    color: var(--ink-dim);
+    transition: color var(--dur-base);
+}
+.frame-filter:hover { color: var(--paper); border-color: var(--line-bright); }
+.frame-filter.active {
+    color: var(--bg);
+    background: var(--red-bright);
+    border-color: var(--red-bright);
+}
+.frame-filter.active em { color: rgba(10, 9, 8, .6); }
+
 .frame-grid {
-    display: grid; grid-template-columns: repeat(5, 1fr); gap: 1px;
-    background: var(--line); border: 1px solid var(--line);
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    grid-auto-rows: 190px;
+    grid-auto-flow: dense;
+    gap: 1px;
+    background: var(--line);
+    border: 1px solid var(--line);
 }
 .frame-cell {
-    position: relative; aspect-ratio: 1 / 1; overflow: hidden; cursor: zoom-in;
-    user-select: none; background: var(--bg2);
+    position: relative;
+    margin: 0;
+    overflow: hidden;
+    background: var(--bg2);
+    cursor: zoom-in;
+    user-select: none;
 }
+.frame-cell.frame-wide { grid-column: span 2; }
+.frame-cell.frame-tall { grid-row: span 2; }
+
 .frame-cell img {
-    width: 100%; height: 100%; object-fit: cover; filter: grayscale(80%) brightness(.5);
-    transition: transform .5s var(--ease-out), filter .45s ease;
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    filter: grayscale(85%) brightness(.48);
+    transform: scale(1.01);
+    transition: transform .7s var(--ease-out), filter .5s ease;
 }
-.frame-cell:hover img { transform: scale(1.06); filter: grayscale(8%) brightness(.92); }
+.frame-cell:hover img {
+    transform: scale(1.07);
+    filter: grayscale(5%) brightness(.94);
+}
+
 .frame-cell.featured { box-shadow: inset 0 2px 0 0 var(--red); }
+
 .frame-num {
-    position: absolute; top: .6rem; left: .6rem; z-index: 2; font-family: var(--mono); font-size: .5rem;
-    color: var(--red-bright); letter-spacing: .1em; text-shadow: 0 1px 6px rgba(0,0,0,.95);
+    position: absolute;
+    top: .7rem;
+    left: .8rem;
+    z-index: 3;
+    font-family: var(--mono);
+    font-size: .52rem;
+    letter-spacing: .12em;
+    color: var(--red-bright);
+    text-shadow: 0 1px 8px rgba(0, 0, 0, .95);
+    transition: transform var(--dur-base) var(--ease-out), color var(--dur-base);
 }
+.frame-cell:hover .frame-num { transform: translateX(3px); color: var(--paper); }
+
 .frame-overlay {
-    position: absolute; inset: 0; z-index: 1; display: flex; align-items: flex-end; padding: .8rem .85rem;
-    background: linear-gradient(to top, rgba(6,5,5,.9) 0%, rgba(6,5,5,.3) 48%, transparent 78%);
-    opacity: 0; transition: opacity var(--dur-base) ease;
+    position: absolute;
+    inset: 0;
+    z-index: 2;
+    display: flex;
+    flex-direction: column;
+    justify-content: flex-end;
+    padding: 1rem 1.05rem 1.05rem;
+    background: linear-gradient(to top, rgba(6, 5, 5, .92) 0%, rgba(6, 5, 5, .35) 45%, transparent 78%);
+    opacity: 0;
+    transition: opacity var(--dur-base) ease;
 }
 .frame-cell:hover .frame-overlay { opacity: 1; }
-.frame-caption {
-    font-family: var(--mono); font-size: .53rem; letter-spacing: .04em; color: var(--paper); line-height: 1.5;
+
+.frame-bar {
+    position: absolute;
+    left: 0;
+    top: 0;
+    bottom: 0;
+    width: 2px;
+    background: var(--red-bright);
+    box-shadow: 0 0 14px var(--red-glow-strong);
+    transform: scaleY(0);
+    transform-origin: bottom;
+    transition: transform .45s var(--ease-out);
 }
-@media (max-width: 860px) { .frame-grid { grid-template-columns: repeat(3, 1fr); } }
+.frame-cell:hover .frame-bar { transform: scaleY(1); }
+
+.frame-cat {
+    font-family: var(--mono);
+    font-size: .48rem;
+    letter-spacing: .24em;
+    text-transform: uppercase;
+    color: var(--red-bright);
+    margin-bottom: .45rem;
+    opacity: 0;
+    transform: translateY(8px);
+    transition: opacity .45s ease .05s, transform .45s var(--ease-out) .05s;
+}
+.frame-cell:hover .frame-cat { opacity: 1; transform: translateY(0); }
+
+.frame-caption {
+    margin: 0;
+    font-family: var(--mono);
+    font-size: .55rem;
+    letter-spacing: .04em;
+    line-height: 1.55;
+    color: var(--paper);
+    opacity: 0;
+    transform: translateY(10px);
+    transition: opacity .45s ease .1s, transform .45s var(--ease-out) .1s;
+}
+.frame-cell:hover .frame-caption { opacity: 1; transform: translateY(0); }
+
+/* filter transitions — cheap, transform/opacity only */
+.frame-cell.is-hidden { display: none; }
+.frame-cell.filter-in { animation: frameIn .5s var(--ease-out) both; }
+@keyframes frameIn {
+    0%   { opacity: 0; transform: translateY(18px) scale(.96); }
+    100% { opacity: 1; transform: none; }
+}
+
+@media (max-width: 1100px) {
+    .frame-grid { grid-template-columns: repeat(3, 1fr); grid-auto-rows: 168px; }
+}
+@media (max-width: 860px) {
+    .frame-grid { grid-template-columns: repeat(2, 1fr); grid-auto-rows: 150px; }
+    .frame-cell.frame-tall { grid-row: span 1; }
+    .frame-overlay { opacity: 1; background: linear-gradient(to top, rgba(6, 5, 5, .9) 0%, transparent 62%); }
+    .frame-bar { transform: scaleY(1); }
+    .frame-cat, .frame-caption { opacity: 1; transform: none; }
+}
 @media (max-width: 560px) {
-    .frame-grid { grid-template-columns: repeat(2, 1fr); }
-    .frame-overlay { opacity: 1; background: linear-gradient(to top, rgba(6,5,5,.85) 0%, transparent 65%); }
+    .frame-grid { grid-template-columns: 1fr; grid-auto-rows: 200px; }
+    .frame-cell.frame-wide { grid-column: span 1; }
+}
+@media (prefers-reduced-motion: reduce) {
+    .frame-cell img { transition: none; }
+    .frame-cell.filter-in { animation: none; }
+    .frame-cat, .frame-caption, .frame-bar { transition: none; }
 }
 
 /* ===== signal / whispers ===== */
@@ -869,3 +1000,48 @@ footer .footer-inner { opacity: 0; transform: translateY(26px); }
     white-space: nowrap; pointer-events: none; backdrop-filter: blur(8px); border-radius: 3px;
 }
 .toast.show { opacity: 1; transform: translateY(0); }
+
+/* ===== self-destruct sequence =====
+   Fired by the "ritual" easter egg. A red scan line sweeps the page
+   while elements are progressively marked .erased (fade + blur +
+   collapse). Once the sweep finishes the DOM is emptied outright. */
+   .wipe-scan {
+    position: fixed;
+    left: 0;
+    right: 0;
+    top: 0;
+    height: 3px;
+    z-index: 10020;
+    pointer-events: none;
+    opacity: 0;
+    background: var(--red-bright);
+    box-shadow: 0 0 24px var(--red-glow-strong), 0 0 70px var(--red-glow);
+}
+.wipe-scan.active {
+    opacity: 1;
+    animation: wipeSweep 5s linear forwards;
+}
+@keyframes wipeSweep {
+    0%   { transform: translateY(-10vh); }
+    100% { transform: translateY(110vh); }
+}
+
+.erase-target {
+    transition:
+        opacity 1.1s ease,
+        filter 1.1s ease,
+        transform 1.1s var(--ease-out),
+        clip-path 1.1s ease;
+}
+.erased {
+    opacity: 0 !important;
+    filter: blur(7px) brightness(0);
+    transform: translateY(-10px) scale(.985);
+    clip-path: inset(0 0 100% 0);
+    pointer-events: none;
+}
+
+@media (prefers-reduced-motion: reduce) {
+    .wipe-scan.active { animation-duration: 5s; }
+    .erase-target { transition-duration: .4s; }
+}
