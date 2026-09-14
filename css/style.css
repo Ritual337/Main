@@ -435,11 +435,7 @@ main { position: relative; z-index: 2; padding-top: var(--nav-h); }
     .log-card.featured { grid-column: span 1; }
 }
 
-/* ===== frames — editorial mosaic =====================================
-   Four-column hairline grid (same language as .log-grid / .index-grid)
-   with two span modifiers for rhythm. Hover states are CSS-only.
-   Filtering is a single staggered fade driven from script.js — no
-   per-frame scroll work, no per-tile listeners. */
+/* ===== frames ===== */
    .frame-filters {
     display: flex;
     flex-wrap: wrap;
@@ -716,15 +712,7 @@ footer { border-top: 1px solid var(--line); }
     .footer-left { flex-direction: column; align-items: flex-start; gap: .8rem; }
 }
 
-/* ===== scroll entrances (GSAP-driven; per-section, content-aware) =====
-   The .reveal class on sections is kept only as a semantic marker for
-   "this section animates in on first scroll" — it no longer hides
-   anything itself. Each section's own children carry their own hidden
-   state below (offset + translucent — transform/opacity only, no
-   filter: blur, which is expensive to animate across many elements
-   and was contributing to scroll lag), animated to rest by the
-   sectionEntrances() timelines in interactions.js so every section
-   reads as an authored moment rather than one repeated fade. */
+/* ===== scroll entrances ===== */
 .reveal { opacity: 1; transform: none; }
 
 #dossier .dossier-text { opacity: 0; transform: translateX(-64px); }
@@ -1001,10 +989,7 @@ footer .footer-inner { opacity: 0; transform: translateY(26px); }
 }
 .toast.show { opacity: 1; transform: translateY(0); }
 
-/* ===== self-destruct sequence =====
-   Fired by the "ritual" easter egg. A red scan line sweeps the page
-   while elements are progressively marked .erased (fade + blur +
-   collapse). Once the sweep finishes the DOM is emptied outright. */
+/* ===== self-destruct ===== */
    .wipe-scan {
     position: fixed;
     left: 0;

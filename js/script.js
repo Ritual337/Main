@@ -1,7 +1,6 @@
 /*
- * script.js — page interactivity (component logic only).
- * Scroll-driven motion lives in interactions.js (Lenis + GSAP).
- * The three.js background lives in three-loader.js / three-scene.js.
+ * script.js — page interactivity (component logic).
+ * Scroll motion lives in interactions.js. Background lives in three-loader.js.
  */
 (function cursorGlow() {
     const glow = document.getElementById('cursor-glow');
@@ -100,23 +99,13 @@
     const stack = document.getElementById('toast-stack');
     if (!stack) return;
 
-    /**
-     * showToast('message')
-     * showToast('message', 4000)
-     * showToast('message', { duration: 4000, error: true })
-     */
     window.showToast = function (msg, opts = {}) {
-        const duration = (typeof opts === 'number')
-            ? opts
-            : (opts.duration || 2800);
-
+        const duration = (typeof opts === 'number') ? opts : (opts.duration || 2800);
         const el = document.createElement('div');
         el.className = 'toast';
         el.textContent = msg;
         stack.appendChild(el);
-
         requestAnimationFrame(() => el.classList.add('show'));
-
         setTimeout(() => {
             el.classList.remove('show');
             setTimeout(() => el.remove(), 350);
@@ -136,17 +125,14 @@
     if (!items.length || !lb || !img || !cap || !close || !backdrop || !prev || !next) return;
 
     let cur = 0;
-
     const visibleItems = () => items.filter(el => !el.classList.contains('is-hidden'));
 
     function open(i) {
         const visible = visibleItems();
         if (!visible.length) return;
-
         let el = items[i];
         if (!el || el.classList.contains('is-hidden')) el = visible[0];
         i = items.indexOf(el);
-
         cur = i;
         img.src = el.dataset.src;
         cap.textContent = el.dataset.caption || '';
@@ -204,7 +190,6 @@
         cells.forEach(cell => {
             const tags = (cell.dataset.tags || '').split(/\s+/);
             const match = filter === 'all' || tags.includes(filter);
-
             if (match) {
                 cell.classList.remove('is-hidden', 'filter-in');
                 void cell.offsetWidth;
@@ -232,9 +217,6 @@
     });
 })();
 
-/* The filter strip is new markup, so interactions.js doesn't know about
-   it — give it its own one-shot entrance rather than leaving it to pop
-   in ahead of the tiles. */
 (function frameFiltersEntrance() {
     const bar = document.getElementById('frame-filters');
     if (!bar) return;
@@ -242,8 +224,7 @@
 
     bar.style.opacity = '0';
     bar.style.transform = 'translateY(18px)';
-    bar.style.transition =
-        'opacity .6s cubic-bezier(.23,1,.32,1), transform .6s cubic-bezier(.23,1,.32,1)';
+    bar.style.transition = 'opacity .6s cubic-bezier(.23,1,.32,1), transform .6s cubic-bezier(.23,1,.32,1)';
 
     const io = new IntersectionObserver((entries) => {
         entries.forEach(en => {
@@ -318,7 +299,6 @@
             if (cursor) cursor.classList.add('hidden');
         }
     }
-    // Wait for the hero letter entrance (interactions.js) before typing.
     if (window.__heroDone) setTimeout(type, 200);
     else document.addEventListener('heroDone', () => setTimeout(type, 200), { once: true });
 })();
@@ -432,8 +412,8 @@
 })();
 
 (function easterEggKeys() {
-    const FLICKER_MS = 5000;   // glitch + invert phase
-    const ERASE_MS   = 5000;   // page deletion phase
+    const FLICKER_MS = 5000;
+    const ERASE_MS = 5000;
 
     let buf = '';
     let active = false;
@@ -448,18 +428,15 @@
         active = true;
         buf = '';
 
-        /* ---- phase 1: discovery ---- */
         window.showToast?.('you found it. hi.', { duration: FLICKER_MS });
         document.body.classList.add('ritual-glitch');
 
         const start = Date.now();
         const flicker = setInterval(() => {
-            document.body.style.filter =
-                Math.random() > 0.5 ? 'invert(1)' : 'none';
-            document.body.style.transform =
-                Math.random() > 0.7
-                    ? `translate(${Math.random() * 8 - 4}px, ${Math.random() * 8 - 4}px)`
-                    : 'none';
+            document.body.style.filter = Math.random() > 0.5 ? 'invert(1)' : 'none';
+            document.body.style.transform = Math.random() > 0.7
+                ? `translate(${Math.random() * 8 - 4}px, ${Math.random() * 8 - 4}px)`
+                : 'none';
 
             if (Date.now() - start >= FLICKER_MS) {
                 clearInterval(flicker);
@@ -470,16 +447,14 @@
             }
         }, 60);
 
-        /* ---- phase 2: erasure ---- */
         function beginErase() {
             const scan = document.getElementById('wipe-scan');
             if (scan) {
                 scan.classList.remove('active');
-                void scan.offsetWidth;        // restart the sweep cleanly
+                void scan.offsetWidth;
                 scan.classList.add('active');
             }
 
-            // every top-level node, in document order, except the scan line
             const targets = Array.from(document.body.children)
                 .filter(el => el.id !== 'wipe-scan');
 
@@ -488,12 +463,11 @@
             targets.forEach((el, i) => {
                 setTimeout(() => {
                     el.classList.add('erase-target');
-                    void el.offsetWidth;      // force style flush so it transitions
+                    void el.offsetWidth;
                     el.classList.add('erased');
                 }, i * step);
             });
 
-            /* ---- phase 3: the blank page ---- */
             setTimeout(() => {
                 document.body.innerHTML = '';
                 document.body.removeAttribute('style');
