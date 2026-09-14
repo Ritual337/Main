@@ -152,9 +152,6 @@
         .entry-row:last-child { border-bottom: none; }
         @keyframes rowIn { to { opacity: 1; transform: translateX(0); } }
         @media (prefers-reduced-motion: reduce) { .entry-row, .audit-row { animation: none !important; opacity: 1 !important; transform: none !important; } }
-        /* nth-child stagger so freshly-rebuilt tables (admin.js does
-           table.innerHTML = '' then re-appends every refresh) cascade in
-           instead of popping in all at once — pure CSS, no JS changes. */
         .entry-row:nth-child(1){animation-delay:0ms}.entry-row:nth-child(2){animation-delay:40ms}.entry-row:nth-child(3){animation-delay:80ms}
         .entry-row:nth-child(4){animation-delay:120ms}.entry-row:nth-child(5){animation-delay:160ms}.entry-row:nth-child(6){animation-delay:200ms}
         .entry-row:nth-child(7){animation-delay:240ms}.entry-row:nth-child(8){animation-delay:280ms}.entry-row:nth-child(9){animation-delay:320ms}
@@ -202,12 +199,11 @@
                 <span class="nav-logo-mark">R</span>
                 <span class="nav-logo-text">Ritu<em>al</em></span>
             </a>
-            <span class="nav-crumb">Restricted <span>/</span> Guestbook Dashboard</span>
+            <span class="nav-crumb">Admin <span>/</span> Guestbook</span>
         </div>
     </div>
 
     <main>
-        <!-- ===== auth gate ===== -->
         <section class="gate" id="auth-gate">
             <div class="gate-card" id="gate-card">
                 <div class="gate-scanlines"></div>
@@ -216,7 +212,6 @@
                 <h1 class="gate-title" id="gate-title">Admin</h1>
                 <p class="gate-sub" id="gate-sub">Enter the admin password for this site.</p>
 
-                <!-- Login form only – setup removed -->
                 <form class="gate-form" id="login-form" novalidate>
                     <div>
                         <label class="gate-field-label" for="login-pass">Password</label>
@@ -233,7 +228,6 @@
             </div>
         </section>
 
-        <!-- ===== dashboard ===== -->
         <section class="dash" id="dashboard" hidden>
 <div class="dash-head">
     <div>
@@ -292,7 +286,6 @@
     <div id="toast-stack" role="status" aria-live="polite"></div>
 
     <script>
-        // GSAP entrance for the gate card.
         (function () {
             const reduced = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
             const card = document.getElementById('gate-card');
@@ -304,11 +297,6 @@
                 .fromTo('#gate-label, #gate-title, #gate-sub', { opacity: 0, y: 10 }, { opacity: 1, y: 0, duration: 0.6, stagger: 0.08 }, '-=0.4');
         })();
 
-        // The dashboard is hidden by default and admin.js clears the `hidden`
-        // attribute the moment login succeeds (or a valid session already
-        // exists). Watch for that one attribute flip and play a single
-        // entrance the first time it happens — additive only, admin.js's
-        // own show/hide logic is never touched.
         (function () {
             const reduced = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
             const dash = document.getElementById('dashboard');
@@ -331,9 +319,6 @@
                 .observe(dash, { attributes: true, attributeFilter: ['hidden'] });
         })();
 
-        // Snap-in pulse whenever a stat number updates (login, refresh, or
-        // after adding/deleting an entry) — read-only observer, never
-        // writes back into the elements admin.js owns.
         (function () {
             const reduced = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
             if (reduced || !window.gsap) return;
@@ -342,7 +327,7 @@
                 if (!el) return;
                 let first = true;
                 new MutationObserver(() => {
-                    if (first) { first = false; return; } // skip the initial "0" paint
+                    if (first) { first = false; return; }
                     gsap.fromTo(el, { scale: 1.25, opacity: 0.5 }, { scale: 1, opacity: 1, duration: 0.4, ease: 'back.out(2.5)' });
                 }).observe(el, { characterData: true, childList: true, subtree: true });
             });

@@ -57,7 +57,8 @@
   .nav-logo:hover .nav-logo-mark { transform: rotate(-8deg) scale(1.08); }
   .nav-logo-text{ font-family:var(--display); font-size:1.1rem; letter-spacing:.1em; color:var(--paper); text-transform:uppercase; }
   .nav-logo-text em{ color:var(--red-bright); font-style:normal; }
-  .nav-status{ font-family:var(--mono); font-size:.6rem; color:var(--ink); letter-spacing:.1em; text-transform:uppercase; }
+  .nav-crumb{ font-family:var(--mono); font-size:.6rem; color:var(--ink); letter-spacing:.18em; text-transform:uppercase; }
+  .nav-crumb span{ color:var(--red-bright); }
 
   main.section{ position:relative; z-index:1; padding: calc(var(--nav-h) + 4rem) 2rem 6rem; max-width:1400px; margin:0 auto; }
 
@@ -101,9 +102,6 @@
   @keyframes cardIn { from { opacity: 0; transform: translateY(16px) scale(.97); } to { opacity: 1; transform: translateY(0) scale(1); } }
   .gallery-card { animation: cardIn .6s var(--ease-out) backwards; }
   @media (prefers-reduced-motion: reduce) { .gallery-card { animation: none; } }
-  /* Staggered entrance for freshly-rendered cards — gallery.js rebuilds the
-     grid's innerHTML on every render, so nth-child delays re-fire naturally
-     on every search/page/poll update without any JS changes needed here. */
   .gallery-grid.layout-grid .gallery-card:nth-child(n),
   .gallery-grid.layout-fixed .gallery-card:nth-child(n),
   .gallery-grid.layout-masonry .gallery-card:nth-child(n) { animation-delay: calc(var(--card-i, 0) * 35ms); }
@@ -196,7 +194,7 @@
     <a href="index.html" class="nav-logo">
       <span class="nav-logo-mark">R</span><span class="nav-logo-text">Ritu<em>al</em></span>
     </a>
-    <div class="nav-status">Public Gallery</div>
+    <span class="nav-crumb">Index <span>/</span> Gallery</span>
   </div>
 </nav>
 
@@ -212,7 +210,6 @@
     <p class="gal-meta" id="gallery-meta"></p>
   </div>
 
-  <!-- Search -->
   <div class="search-area" id="search-area">
     <input type="text" id="search-input" placeholder="Search by caption..." />
     <button class="search-clear" id="search-clear">Clear</button>
@@ -221,7 +218,6 @@
   <p class="gallery-state" id="gallery-state" hidden></p>
   <div class="gallery-grid skeleton" id="gallery-grid" hidden></div>
 
-  <!-- Pagination -->
   <div class="pagination" id="pagination"></div>
 </main>
 
@@ -258,11 +254,6 @@
     }
   })();
 
-  // One-shot GSAP entrance for the static header/search chrome. Card-level
-  // stagger is handled entirely by the CSS nth-child rule above + a tiny
-  // MutationObserver below that stamps a --card-i custom property onto each
-  // freshly-rendered card — additive only, gallery.js's own render() logic
-  // is never touched.
   (function () {
     const reduced = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
     if (!reduced && window.gsap) {
@@ -282,9 +273,6 @@
     }
   })();
 
-  // Stamp a --card-i index onto gallery cards as gallery.js renders them,
-  // purely for the CSS stagger-delay rule above. Read-only observer —
-  // never mutates anything gallery.js manages itself.
   (function () {
     const grid = document.getElementById('gallery-grid');
     if (!grid || !('MutationObserver' in window)) return;

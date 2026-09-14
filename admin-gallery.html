@@ -137,8 +137,6 @@
   }
   @keyframes itemIn { to { opacity: 1; transform: translateY(0) scale(1); } }
   @media (prefers-reduced-motion: reduce) { .image-item { animation: none !important; opacity: 1 !important; transform: none !important; } }
-  /* nth-child stagger — admin-gallery.js rebuilds #image-grid's innerHTML
-     on every load/refresh, so this re-fires naturally without any JS changes. */
   .image-item:nth-child(1){animation-delay:0ms}.image-item:nth-child(2){animation-delay:35ms}.image-item:nth-child(3){animation-delay:70ms}
   .image-item:nth-child(4){animation-delay:105ms}.image-item:nth-child(5){animation-delay:140ms}.image-item:nth-child(6){animation-delay:175ms}
   .image-item:nth-child(7){animation-delay:210ms}.image-item:nth-child(8){animation-delay:245ms}.image-item:nth-child(n+9){animation-delay:280ms}
@@ -166,7 +164,7 @@
       <span class="nav-logo-text">Ritu<em>al</em></span>
     </a>
     <div class="nav-actions">
-      <span class="nav-crumb">Restricted <span>/</span> Gallery Admin</span>
+      <span class="nav-crumb">Admin <span>/</span> Gallery</span>
       <button class="btn-logout" data-logout type="button">Logout</button>
     </div>
   </div>
@@ -182,7 +180,6 @@
   <h1 class="section-title">Upload Frames</h1>
   <p class="section-note">Add new photographs to the gallery, or remove ones already published.</p>
 
-  <!-- Upload -->
   <div class="upload-area" id="upload-area">
     <label for="file-input" class="upload-label"><span class="upload-icon">+</span>Drop image here or click to browse</label>
     <input type="file" id="file-input" accept="image/*" hidden />
@@ -195,7 +192,6 @@
     <p id="upload-status"></p>
   </div>
 
-  <!-- Actions -->
   <div class="eyebrow" style="margin-top:2.5rem;">
     <span class="eyebrow-num">09</span>
     <span class="eyebrow-text">Published</span>
@@ -210,7 +206,6 @@
 
   <div class="image-grid" id="image-grid"></div>
 
-  <!-- Settings -->
   <div class="settings-area">
     <div class="eyebrow" style="margin-top:3rem; margin-bottom:1rem;">
       <span class="eyebrow-num">10</span>
@@ -234,10 +229,6 @@
 </main>
 
 <script>
-  // One-shot GSAP entrance for the static page chrome. #image-grid's own
-  // items animate via the CSS nth-child rules above (they re-fire every
-  // time admin-gallery.js rebuilds the grid), so this never touches
-  // dynamic content directly.
   (function () {
     const reduced = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
     if (reduced || !window.gsap) {

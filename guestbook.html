@@ -17,9 +17,6 @@
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css" />
     <link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=IBM+Plex+Mono:ital,wght@0,400;0,500;0,600;0,700;1,400&family=Source+Serif+4:ital,wght@0,400;0,500;0,600;0,700;1,400;1,500;1,600&display=swap" rel="stylesheet" />
 
-    <!-- GSAP only, no Lenis/ScrollTrigger scrub here — this page is a form
-         and a list, so it gets a one-shot entrance timeline, not a full
-         scroll-motion rig. Keeps it light. -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.5/gsap.min.js"></script>
 
     <script src="js/guestbook-store.js" defer></script>
@@ -78,20 +75,20 @@
         }
         .nav-bar.scrolled { background: rgba(10,9,8,0.94); border-bottom-color: var(--line-bright); }
         .nav-inner {
-            max-width: 1040px; height: 100%; margin: 0 auto; padding: 0 2rem;
+            max-width: 1400px; height: 100%; margin: 0 auto; padding: 0 2rem;
             display: flex; align-items: center; justify-content: space-between; gap: 1rem;
         }
         .nav-logo { display: flex; align-items: center; gap: .6rem; text-decoration: none; }
         .nav-logo-mark {
             width: 26px; height: 26px; flex: none; display: flex; align-items: center; justify-content: center;
-            background: var(--red); color: var(--bg); font-family: var(--display); font-size: 1.05rem;
+            background: var(--red); color: var(--bg); font-family: var(--display); font-size: 1.1rem;
             border-radius: 3px; box-shadow: 0 0 14px var(--red-glow-strong);
             transition: transform var(--dur-base) var(--ease-out);
         }
         .nav-logo:hover .nav-logo-mark { transform: rotate(-8deg) scale(1.08); }
-        .nav-logo-text { font-family: var(--display); font-size: 1.05rem; letter-spacing: .1em; color: var(--paper); text-transform: uppercase; }
+        .nav-logo-text { font-family: var(--display); font-size: 1.1rem; letter-spacing: .1em; color: var(--paper); text-transform: uppercase; }
         .nav-logo-text em { color: var(--red-bright); font-style: normal; }
-        .nav-crumb { font-family: var(--mono); font-size: .58rem; letter-spacing: .18em; text-transform: uppercase; color: var(--ink); }
+        .nav-crumb { font-family: var(--mono); font-size: .6rem; letter-spacing: .18em; text-transform: uppercase; color: var(--ink); }
         .nav-crumb span { color: var(--red-bright); }
 
         /* ===== page shell ===== */
@@ -191,7 +188,6 @@
         .entry-msg { font-size: 1rem; font-style: italic; color: var(--ink); line-height: 1.6; word-wrap: break-word; }
         @media (max-width: 560px) { .entry { grid-template-columns: 1fr; gap: .4rem; } .entry-num { display: none; } }
 
-        /* ===== lightweight one-time reveal for static chrome (GSAP handles most; this is a no-JS fallback) ===== */
         @media (prefers-reduced-motion: reduce) {
             .gb-kicker, .gb-title .line span, .gb-rule, .gb-lede, .console-card, .ledger-head { opacity: 1 !important; transform: none !important; }
         }
@@ -256,7 +252,6 @@
                     <label class="field-label" for="gb-message">Message</label>
                     <textarea id="gb-message" name="message" placeholder="Say something..." maxlength="240" required aria-label="Your message"></textarea>
                 </div>
-                <!-- honeypot: real visitors never see or fill this in -->
                 <div class="hp-field" aria-hidden="true">
                     <label for="gb-website">Website</label>
                     <input type="text" id="gb-website" name="website" tabindex="-1" autocomplete="off" />
@@ -288,7 +283,6 @@
     <div id="toast-stack" role="status" aria-live="polite"></div>
 
     <script>
-        // Nav scroll shadow + cursor glow — self-contained, no dependency on guestbook.js.
         (function () {
             const nav = document.getElementById('nav-bar');
             if (nav) window.addEventListener('scroll', () => nav.classList.toggle('scrolled', window.scrollY > 40), { passive: true });
@@ -305,10 +299,6 @@
             }
         })();
 
-        // One-shot GSAP entrance for the static header + console card. The
-        // ledger entries animate themselves (guestbook.js sets a per-row
-        // animation-delay and the .entry CSS keyframe above handles the rest),
-        // so nothing here ever touches #ledger's contents.
         (function () {
             const reduced = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
             if (reduced || !window.gsap) return;
