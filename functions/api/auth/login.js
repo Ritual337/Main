@@ -22,7 +22,10 @@ export async function onRequest(context) {
     return new Response(JSON.stringify({ error: 'Invalid password' }), { status: 401 });
   }
 
-  const token = await signJWT({ exp: Date.now() + 60 * 60 * 1000 }, env.JWT_SECRET);
+  const token = await signJWT(
+    { role: 'gallery', exp: Date.now() + 60 * 60 * 1000 },
+    env.JWT_SECRET
+  );
   return new Response(JSON.stringify({ token }), {
     headers: { 'Content-Type': 'application/json' },
   });

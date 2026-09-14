@@ -38,7 +38,7 @@ export async function onRequest(context) {
     }
     const token = authHeader.slice(7);
     const payload = await verifyJWT(token, env.JWT_SECRET);
-    if (!payload) {
+    if (!payload || payload.role !== 'admin') {
       return new Response('Unauthorized', { status: 401 });
     }
     await env.DB.prepare('DELETE FROM entries').run();
