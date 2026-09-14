@@ -329,14 +329,30 @@
 
 (function easterEggKeys() {
     let buf = '';
+
     document.addEventListener('keydown', (e) => {
         if (e.key.length !== 1) return;
+
         buf = (buf + e.key.toLowerCase()).slice(-6);
+
         if (buf === 'ritual') {
             window.showToast?.('you found it. hi.');
+
             document.body.style.transition = 'filter 0.15s ease';
-            document.body.style.filter = 'invert(1)';
-            setTimeout(() => { document.body.style.filter = 'none'; }, 150);
+
+            const start = Date.now();
+            const flicker = setInterval(() => {
+                document.body.style.filter =
+                    document.body.style.filter === 'invert(1)'
+                        ? 'none'
+                        : 'invert(1)';
+
+                if (Date.now() - start >= 5000) {
+                    clearInterval(flicker);
+                    document.body.style.filter = 'none';
+                }
+            }, 150);
+
             buf = '';
         }
     });
