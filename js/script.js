@@ -329,31 +329,44 @@
 
 (function easterEggKeys() {
     let buf = '';
+    let active = false;
 
     document.addEventListener('keydown', (e) => {
         if (e.key.length !== 1) return;
 
         buf = (buf + e.key.toLowerCase()).slice(-6);
 
-        if (buf === 'ritual') {
-            window.showToast?.('you found it. hi.');
+        if (buf === 'ritual' && !active) {
+            active = true;
+            buf = '';
 
-            document.body.style.transition = 'filter 0.15s ease';
+            // Toast stays for 5 seconds
+            window.showToast?.('you found it. hi.', { duration: 5000 });
+
+            document.body.classList.add('ritual-glitch');
 
             const start = Date.now();
+
+            // Fast flickering + glitch for 5 seconds
             const flicker = setInterval(() => {
                 document.body.style.filter =
-                    document.body.style.filter === 'invert(1)'
-                        ? 'none'
-                        : 'invert(1)';
+                    Math.random() > 0.5 ? 'invert(1)' : 'none';
+
+                document.body.style.transform =
+                    Math.random() > 0.7
+                        ? `translate(${Math.random() * 8 - 4}px, ${Math.random() * 8 - 4}px)`
+                        : 'none';
 
                 if (Date.now() - start >= 5000) {
                     clearInterval(flicker);
-                    document.body.style.filter = 'none';
-                }
-            }, 150);
 
-            buf = '';
+                    document.body.style.filter = 'none';
+                    document.body.style.transform = 'none';
+                    document.body.classList.remove('ritual-glitch');
+
+                    active = false;
+                }
+            }, 60);
         }
     });
 })();

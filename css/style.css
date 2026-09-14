@@ -737,7 +737,18 @@ footer .footer-inner { opacity: 0; transform: translateY(26px); }
     .glitch-ritual { font-size: clamp(2.5rem, 16vw, 4.5rem); }
     .poem-card { padding: 2rem 1.4rem; max-width: 95%; }
 }
+.ritual-glitch {
+    animation: ritualGlitch 0.12s steps(2, end) infinite;
+}
 
+@keyframes ritualGlitch {
+    0%   { transform: translate(0); text-shadow: none; }
+    20%  { transform: translate(-3px, 2px); text-shadow: 3px 0 #f00, -3px 0 #0ff; }
+    40%  { transform: translate(3px, -2px); text-shadow: -3px 0 #f00, 3px 0 #0ff; }
+    60%  { transform: translate(-2px, -1px); }
+    80%  { transform: translate(2px, 1px); text-shadow: 2px 0 #f00, -2px 0 #0ff; }
+    100% { transform: translate(0); text-shadow: none; }
+}
 /* ===== card overlay ===== */
 .card-overlay .card-scene { width: 360px; height: 244px; position: relative; perspective: 1100px; }
 .card-overlay .card-flip {
