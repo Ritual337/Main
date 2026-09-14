@@ -123,7 +123,7 @@ if (!REDUCED_MOTION && window.Lenis) {
     const titleEl = document.querySelector('.hero-title');
     if (!titleEl) return;
 
-    // Split "RITUAL" into individual animated characters.
+    // Split "R3ign" into individual animated characters.
     const word = titleEl.textContent.trim();
     titleEl.textContent = '';
     word.split('').forEach((ch) => {

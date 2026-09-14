@@ -166,7 +166,7 @@ function render() {
   `).join('');
 
   // Re-apply layout
-  const savedLayout = localStorage.getItem('ritual_gallery_layout') || 'grid';
+  const savedLayout = localStorage.getItem('R3ign_gallery_layout') || 'grid';
   grid.className = 'gallery-grid layout-' + savedLayout;
 
   // Attach click events

@@ -3,9 +3,9 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
-    <title>Altair — Ritual</title>
+    <title>Altair — R3ign</title>
 
-    <meta name="description" content="A hidden corner of Ritual — a slow, private orbit around Altair." />
+    <meta name="description" content="A hidden corner of R3ign — a slow, private orbit around Altair." />
     <meta name="robots" content="noindex, nofollow" />
     <meta name="theme-color" content="#0b0a09" />
     <meta name="color-scheme" content="dark" />
@@ -259,7 +259,7 @@
     <div class="vignette"></div>
 
     <div id="overlay">
-        <a class="corner-tag corner-tag-left" href="index.html">← back to ritual</a>
+        <a class="corner-tag corner-tag-left" href="index.html">← back to R3ign</a>
         <div class="corner-tag corner-tag-right">file n.157</div>
 
         <div id="title">
@@ -295,7 +295,7 @@
          * Same orbit-drag / scroll-zoom mechanics as the original piece; the
          * lighting, textures, and sprite tint are recolored so the whole scene
          * reads as warm gold / paper / red instead of icy blue-white, matching
-         * the rest of Ritual (which never uses blue anywhere).
+         * the rest of R3ign (which never uses blue anywhere).
          */
         (function() {
             "use strict";
@@ -365,7 +365,7 @@
                 starMesh.scale.set(1, OBLATENESS, 1); // fast rotators bulge at the equator
                 scene.add(starMesh);
 
-                // Wide, faint red halo behind everything — Ritual's signature glow
+                // Wide, faint red halo behind everything — R3ign's signature glow
                 // treatment (the same soft red bloom used on the nav mark, the status
                 // dot, the hero title) applied to the one thing on this page worth it.
                 var haloTex = generateHaloTexture();
@@ -420,7 +420,7 @@
             }
 
             // Latitude-banded texture: was icy-blue poles fading to gold at the
-            // equator (a nod to real gravity-darkening); poles are now Ritual's
+            // equator (a nod to real gravity-darkening); poles are now R3ign's
             // paper tone instead of blue, so nothing on the sphere reads cold.
             function generateStarTexture() {
                 var w = 1024,
@@ -486,7 +486,7 @@
             }
 
             // Soft red bloom, wider and fainter than the glow sprite, sitting behind
-            // it — Ritual's --red-glow-strong translated into the 3D scene.
+            // it — R3ign's --red-glow-strong translated into the 3D scene.
             function generateHaloTexture() {
                 var size = 256;
                 var canvas = document.createElement('canvas');
