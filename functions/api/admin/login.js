@@ -1,4 +1,5 @@
 import { signJWT } from '../_jwt.js';
+import { verifyPassword } from '../_password.js';
 
 export async function onRequest(context) {
   const { request, env } = context;
@@ -11,13 +12,8 @@ export async function onRequest(context) {
     return new Response(JSON.stringify({ error: 'Password required' }), { status: 400 });
   }
 
-  const encoder = new TextEncoder();
-  const data = encoder.encode(password);
-  const hashBuffer = await crypto.subtle.digest('SHA-256', data);
-  const hashArray = Array.from(new Uint8Array(hashBuffer));
-  const hashHex = hashArray.map(b => b.toString(16).padStart(2, '0')).join('');
-
-  if (hashHex !== env.ADMIN_PASSWORD_HASH) {
+  const ok = await verifyPassword(password, env.ADMIN_PASSWORD_HASH);
+  if (!ok) {
     return new Response(JSON.stringify({ error: 'Invalid password' }), { status: 401 });
   }
 
