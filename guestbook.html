@@ -17,16 +17,17 @@
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css" />
     <link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=IBM+Plex+Mono:ital,wght@0,400;0,500;0,600;0,700;1,400&family=Source+Serif+4:ital,wght@0,400;0,500;0,600;0,700;1,400;1,500;1,600&display=swap" rel="stylesheet" />
 
-    <!-- Deliberately no three.js background here, and no Lenis/GSAP — this
-         is a form + a list of short-lived DOM updates, not a hero moment,
-         so it skips the heavy motion stack entirely and stays fast. The
-         vignette and reveal-on-scroll below are pure CSS/vanilla JS. -->
+    <!-- GSAP only, no Lenis/ScrollTrigger scrub here — this page is a form
+         and a list, so it gets a one-shot entrance timeline, not a full
+         scroll-motion rig. Keeps it light. -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.5/gsap.min.js"></script>
+
     <script src="js/guestbook-store.js" defer></script>
     <script src="js/guestbook.js" defer></script>
 
     <style>
         :root {
-            --bg: #0a0908; --bg2: #121110; --bg3: #17140f;
+            --bg: #0a0908; --bg2: #121110; --bg3: #17140f; --bg4: #1d1a15;
             --paper: #f1ead9; --paper-dim: #cbc2ad;
             --ink: #8d8578; --ink-dim: #5c564c;
             --red: #d81f2f; --red-bright: #ff3346; --red-deep: #6e0f17;
@@ -43,16 +44,30 @@
         html { scrollbar-width: thin; scrollbar-color: var(--line-bright) transparent; }
         body {
             background: var(--bg); color: var(--paper-dim); font-family: var(--serif);
-            min-height: 100vh; cursor: crosshair; -webkit-font-smoothing: antialiased;
+            min-height: 100vh; cursor: crosshair; -webkit-font-smoothing: antialiased; overflow-x: hidden;
         }
         img { max-width: 100%; display: block; }
         button { font: inherit; }
         :focus-visible { outline: 2px solid var(--red-bright); outline-offset: 3px; border-radius: 1px; }
 
+        .grain {
+            position: fixed; inset: -100px; z-index: 2; pointer-events: none; opacity: 0.05; mix-blend-mode: overlay;
+            background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='120' height='120'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='2' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
+        }
         .vignette {
             position: fixed; inset: 0; pointer-events: none; z-index: 0;
             background: radial-gradient(ellipse at center, transparent 45%, rgba(0,0,0,0.75) 100%);
         }
+        #cursor-glow {
+            position: fixed; pointer-events: none; z-index: 9997; top: 0; left: 0;
+            width: 90px; height: 90px; border-radius: 50%;
+            background: radial-gradient(circle, rgba(216,31,47,.2) 0%, rgba(216,31,47,.05) 50%, transparent 70%);
+            will-change: transform; transition: width .35s var(--ease-out), height .35s var(--ease-out), opacity .35s var(--ease-out);
+            mix-blend-mode: screen;
+        }
+        #cursor-glow.hover { width: 150px; height: 150px; background: radial-gradient(circle, rgba(255,51,70,.3) 0%, rgba(216,31,47,.09) 50%, transparent 70%); }
+        @media (max-width: 860px), (hover: none) { #cursor-glow { display: none; } }
+        @media (prefers-reduced-motion: reduce) { #cursor-glow { display: none !important; } }
 
         /* ===== nav ===== */
         .nav-bar {
@@ -63,7 +78,7 @@
         }
         .nav-bar.scrolled { background: rgba(10,9,8,0.94); border-bottom-color: var(--line-bright); }
         .nav-inner {
-            max-width: 900px; height: 100%; margin: 0 auto; padding: 0 2rem;
+            max-width: 1040px; height: 100%; margin: 0 auto; padding: 0 2rem;
             display: flex; align-items: center; justify-content: space-between; gap: 1rem;
         }
         .nav-logo { display: flex; align-items: center; gap: .6rem; text-decoration: none; }
@@ -80,97 +95,130 @@
         .nav-crumb span { color: var(--red-bright); }
 
         /* ===== page shell ===== */
-        main { position: relative; z-index: 1; max-width: 900px; margin: 0 auto; padding: calc(var(--nav-h) + 3.5rem) 2rem 6rem; }
-        @media (max-width: 700px) { main { padding: calc(var(--nav-h) + 2.2rem) 1.2rem 4rem; } }
+        main { position: relative; z-index: 1; max-width: 1040px; margin: 0 auto; padding: calc(var(--nav-h) + 4.5rem) 2rem 6rem; }
+        @media (max-width: 700px) { main { padding: calc(var(--nav-h) + 2.6rem) 1.2rem 4rem; } }
 
-        .eyebrow { display: flex; align-items: center; gap: 1rem; margin-bottom: 1.6rem; }
-        .eyebrow-mark {
-            font-family: var(--mono); font-size: .62rem; letter-spacing: .18em; color: var(--bg);
-            background: var(--red); padding: .25rem .5rem; border-radius: 2px;
+        /* ===== hero header ===== */
+        .gb-hero { text-align: center; margin-bottom: 5rem; }
+        .gb-kicker {
+            font-family: var(--mono); font-size: .62rem; letter-spacing: .34em; text-transform: uppercase;
+            color: var(--red-bright); margin-bottom: 1.6rem; opacity: 0;
         }
-        .eyebrow-text { font-family: var(--mono); font-size: .62rem; letter-spacing: .3em; text-transform: uppercase; color: var(--paper); }
-        .eyebrow-line { flex: 1; height: 1px; background: var(--line-bright); }
+        .gb-kicker::before { content: '◆ '; }
+        .gb-title {
+            font-family: var(--display); font-weight: 400; text-transform: uppercase;
+            font-size: clamp(3rem, 10vw, 6.5rem); letter-spacing: .01em; line-height: .9; color: var(--paper);
+        }
+        .gb-title .line { display: block; overflow: hidden; }
+        .gb-title .line span { display: block; opacity: 0; transform: translateY(110%); }
+        .gb-title em { color: var(--red-bright); font-style: normal; }
+        .gb-rule {
+            width: 180px; height: 1px; margin: 1.8rem auto 1.6rem;
+            background-image: repeating-linear-gradient(90deg, var(--line-bright) 0 6px, transparent 6px 12px);
+            transform: scaleX(0); transform-origin: center;
+        }
+        .gb-lede {
+            font-family: var(--serif); font-style: italic; font-size: 1.05rem; color: var(--ink);
+            max-width: 52ch; margin: 0 auto; line-height: 1.7; opacity: 0;
+        }
 
-        h1 { font-family: var(--display); font-size: clamp(2.4rem, 6vw, 3.6rem); letter-spacing: .01em; text-transform: uppercase; color: var(--paper); line-height: 1; margin-bottom: 1rem; }
-        h1 em { color: var(--red-bright); font-style: normal; }
-        .lede { font-family: var(--serif); font-style: italic; font-size: 1.05rem; color: var(--ink); max-width: 56ch; line-height: 1.6; margin-bottom: 3rem; }
+        /* ===== sign console ===== */
+        .console-card {
+            position: relative; background: var(--bg2); border: 1px solid var(--line); padding: 2.2rem;
+            margin-bottom: 5rem; opacity: 0;
+        }
+        .console-card::before, .console-card::after {
+            content: ''; position: absolute; width: 18px; height: 18px; border: 2px solid var(--red-bright); opacity: .7; pointer-events: none;
+        }
+        .console-card::before { top: -1px; left: -1px; border-right: none; border-bottom: none; }
+        .console-card::after { bottom: -1px; right: -1px; border-left: none; border-top: none; }
+        .console-head { display: flex; align-items: center; gap: .8rem; margin-bottom: 1.6rem; }
+        .console-dot { width: 6px; height: 6px; border-radius: 50%; background: var(--red-bright); box-shadow: 0 0 8px var(--red-glow-strong); animation: pulseDot 2.2s ease-in-out infinite; }
+        @keyframes pulseDot { 0%,100%{opacity:1;} 50%{opacity:.35;} }
+        @media (prefers-reduced-motion: reduce) { .console-dot { animation: none; } }
+        .console-label { font-family: var(--mono); font-size: .58rem; letter-spacing: .24em; text-transform: uppercase; color: var(--red-bright); }
+        .console-line { flex: 1; height: 1px; background: var(--line-bright); }
 
-        .layout { display: grid; grid-template-columns: minmax(0, 340px) 1fr; gap: 3rem; align-items: start; }
-        @media (max-width: 800px) { .layout { grid-template-columns: 1fr; gap: 2.5rem; } }
-
-        /* ===== sign form ===== */
-        .sign-card { background: var(--bg2); border: 1px solid var(--line); border-top: 2px solid var(--red); padding: 1.8rem; position: sticky; top: calc(var(--nav-h) + 1.5rem); }
-        @media (max-width: 800px) { .sign-card { position: static; } }
-        .sign-label { font-family: var(--mono); font-size: .55rem; letter-spacing: .2em; text-transform: uppercase; color: var(--red-bright); margin-bottom: 1.1rem; }
-        .sign-form { display: flex; flex-direction: column; gap: .75rem; }
+        .sign-form { display: flex; flex-direction: column; gap: 1.1rem; }
+        .field-label { font-family: var(--mono); font-size: .5rem; letter-spacing: .16em; text-transform: uppercase; color: var(--ink-dim); margin-bottom: .4rem; display: block; }
         .sign-form input, .sign-form textarea {
             background: var(--bg); border: 1px solid var(--line); border-bottom: 1px solid var(--line-bright);
-            color: var(--paper); font-family: var(--serif); font-size: .92rem; padding: .65rem .75rem; resize: none;
-            outline: none; transition: border-color var(--dur-base); width: 100%;
+            color: var(--paper); font-family: var(--serif); font-size: .95rem; padding: .7rem .8rem; resize: none;
+            outline: none; transition: border-color var(--dur-base), box-shadow var(--dur-base); width: 100%;
         }
-        .sign-form input:focus, .sign-form textarea:focus { border-color: var(--red-bright); }
-        .sign-form textarea { min-height: 100px; font-style: italic; }
-        .char-count { font-family: var(--mono); font-size: .48rem; color: var(--ink-dim); letter-spacing: .08em; text-align: right; }
+        .sign-form input:focus, .sign-form textarea:focus { border-color: var(--red-bright); box-shadow: 0 0 0 3px var(--red-glow); }
+        .sign-form textarea { min-height: 110px; font-style: italic; }
+        .console-foot { display: flex; align-items: center; justify-content: space-between; gap: 1rem; flex-wrap: wrap; margin-top: .3rem; }
+        .char-count { font-family: var(--mono); font-size: .48rem; color: var(--ink-dim); letter-spacing: .08em; }
         .sign-submit {
-            align-self: flex-start; background: none; border: 1px solid var(--red-bright); color: var(--red-bright);
-            font-family: var(--mono); font-size: .55rem; letter-spacing: .2em; text-transform: uppercase;
-            padding: .65rem 1.3rem; cursor: pointer; transition: all var(--dur-base); margin-top: .3rem;
-            display: inline-flex; align-items: center; gap: .5rem;
+            background: none; border: 1px solid var(--red-bright); color: var(--red-bright);
+            font-family: var(--mono); font-size: .58rem; letter-spacing: .22em; text-transform: uppercase;
+            padding: .8rem 1.6rem; cursor: pointer; transition: all var(--dur-base);
+            display: inline-flex; align-items: center; gap: .6rem;
         }
-        .sign-submit:hover { background: var(--red-bright); color: var(--bg); box-shadow: 0 0 28px var(--red-glow-strong); }
+        .sign-submit:hover { background: var(--red-bright); color: var(--bg); box-shadow: 0 0 30px var(--red-glow-strong); }
         .sign-submit:disabled { opacity: .5; cursor: not-allowed; box-shadow: none; background: none; color: var(--red-bright); }
-        .sign-note { font-family: var(--mono); font-size: .5rem; color: var(--ink-dim); letter-spacing: .04em; line-height: 1.7; margin-top: 1.1rem; padding-top: 1rem; border-top: 1px solid var(--line); }
-        /* honeypot — hidden from real visitors, left open for simple bots */
+        .sign-note {
+            font-family: var(--mono); font-size: .5rem; color: var(--ink-dim); letter-spacing: .04em; line-height: 1.7;
+            margin-top: .5rem; padding-top: 1.2rem; border-top: 1px solid var(--line);
+        }
         .hp-field { position: absolute; left: -9999px; width: 1px; height: 1px; overflow: hidden; }
+        @media (max-width: 640px) { .console-card { padding: 1.6rem; } }
 
         /* ===== ledger ===== */
-        .ledger-head { display: flex; align-items: baseline; justify-content: space-between; margin-bottom: 1.2rem; gap: 1rem; flex-wrap: wrap; }
-        .ledger-count { font-family: var(--mono); font-size: .55rem; letter-spacing: .12em; color: var(--ink); text-transform: uppercase; }
+        .ledger-head { display: flex; align-items: center; gap: 1rem; margin-bottom: 1.6rem; opacity: 0; }
+        .ledger-mark { font-family: var(--mono); font-size: .6rem; letter-spacing: .14em; color: var(--bg); background: var(--red); padding: .22rem .5rem; border-radius: 2px; }
+        .ledger-text { font-family: var(--mono); font-size: .6rem; letter-spacing: .28em; text-transform: uppercase; color: var(--paper); }
+        .ledger-line { flex: 1; height: 1px; background: var(--line-bright); }
+        .ledger-count { font-family: var(--mono); font-size: .55rem; letter-spacing: .1em; color: var(--ink); white-space: nowrap; }
         .ledger-count strong { color: var(--red-bright); }
-        .ledger { display: flex; flex-direction: column; }
-        .ledger-empty { font-family: var(--mono); font-size: .58rem; color: var(--ink-dim); letter-spacing: .08em; padding: 2.5rem 0; text-align: center; border: 1px dashed var(--line); }
+
+        .ledger { display: flex; flex-direction: column; gap: 1px; background: var(--line); border: 1px solid var(--line); }
+        .ledger-empty { font-family: var(--mono); font-size: .58rem; color: var(--ink-dim); letter-spacing: .08em; padding: 3rem 0; text-align: center; background: var(--bg2); }
         .entry {
-            display: grid; grid-template-columns: 3.2rem 1fr; gap: 1rem; padding: 1.2rem 1rem; margin: 0 -1rem;
-            border-bottom: 1px solid var(--line); border-radius: 3px;
-            opacity: 0; transform: translateY(10px); animation: entryIn .5s var(--ease-out) forwards;
-            transition: background var(--dur-base) ease;
+            display: grid; grid-template-columns: 3.6rem 1fr; gap: 1.1rem; padding: 1.3rem 1.4rem; background: var(--bg2);
+            border-left: 2px solid transparent;
+            opacity: 0; transform: translateX(-14px); animation: entryIn .6s var(--ease-out) forwards;
+            transition: background var(--dur-base) ease, border-color var(--dur-base) ease;
         }
-        .entry:hover { background: var(--bg2); }
-        .entry:last-child { border-bottom: none; }
+        .entry:hover { background: var(--bg3); border-left-color: var(--red-bright); }
         @media (prefers-reduced-motion: reduce) { .entry { animation: none; opacity: 1; transform: none; } }
-        @keyframes entryIn { to { opacity: 1; transform: translateY(0); } }
-        .entry-num { font-family: var(--mono); font-size: .58rem; color: var(--red-bright); letter-spacing: .05em; padding-top: .15rem; }
-        .entry-head { display: flex; align-items: baseline; gap: .7rem; flex-wrap: wrap; margin-bottom: .35rem; }
+        @keyframes entryIn { to { opacity: 1; transform: translateX(0); } }
+        .entry-num { font-family: var(--mono); font-size: .6rem; color: var(--red-bright); letter-spacing: .05em; padding-top: .15rem; }
+        .entry-head { display: flex; align-items: baseline; gap: .7rem; flex-wrap: wrap; margin-bottom: .4rem; }
         .entry-name { font-family: var(--mono); font-size: .62rem; letter-spacing: .1em; text-transform: uppercase; color: var(--paper); }
         .entry-time { font-family: var(--mono); font-size: .5rem; color: var(--ink-dim); letter-spacing: .04em; }
         .entry-msg { font-size: 1rem; font-style: italic; color: var(--ink); line-height: 1.6; word-wrap: break-word; }
+        @media (max-width: 560px) { .entry { grid-template-columns: 1fr; gap: .4rem; } .entry-num { display: none; } }
 
-        /* ===== lightweight scroll-reveal (no GSAP needed on this page) ===== */
-        .rv { opacity: 0; transform: translateY(22px); transition: opacity .8s var(--ease-out), transform .8s var(--ease-out); }
-        .rv.in-view { opacity: 1; transform: translateY(0); }
-        @media (prefers-reduced-motion: reduce) { .rv { opacity: 1 !important; transform: none !important; transition: none !important; } }
+        /* ===== lightweight one-time reveal for static chrome (GSAP handles most; this is a no-JS fallback) ===== */
+        @media (prefers-reduced-motion: reduce) {
+            .gb-kicker, .gb-title .line span, .gb-rule, .gb-lede, .console-card, .ledger-head { opacity: 1 !important; transform: none !important; }
+        }
 
         /* ===== toast ===== */
         #toast-stack { position: fixed; bottom: 2rem; left: 50%; transform: translateX(-50%); z-index: 9500; display: flex; flex-direction: column; align-items: center; gap: .5rem; pointer-events: none; }
         .toast {
             font-family: var(--mono); font-size: .55rem; letter-spacing: .1em; color: var(--paper);
             background: rgba(10,9,8,.94); border: 1px solid var(--line-bright); border-left: 2px solid var(--red-bright);
-            padding: .6rem 1rem; opacity: 0; transform: translateY(10px); transition: opacity .3s ease, transform .3s ease;
-            white-space: nowrap; pointer-events: none; backdrop-filter: blur(8px);
+            padding: .65rem 1.05rem; opacity: 0; transform: translateY(10px); transition: opacity .3s ease, transform .3s ease;
+            white-space: nowrap; pointer-events: none; backdrop-filter: blur(8px); border-radius: 3px;
         }
         .toast.show { opacity: 1; transform: translateY(0); }
         .toast.error { border-left-color: var(--red-deep); color: var(--paper-dim); }
 
         /* ===== footer ===== */
         footer { position: relative; z-index: 1; border-top: 1px solid var(--line); }
-        .footer-inner { max-width: 900px; margin: 0 auto; padding: 1.8rem 2rem; display: flex; align-items: center; justify-content: space-between; gap: 1rem; flex-wrap: wrap; }
+        .footer-inner { max-width: 1040px; margin: 0 auto; padding: 1.8rem 2rem; display: flex; align-items: center; justify-content: space-between; gap: 1rem; flex-wrap: wrap; }
         .back-link { font-family: var(--mono); font-size: .58rem; letter-spacing: .14em; text-transform: uppercase; color: var(--ink); text-decoration: none; transition: color var(--dur-fast); display: inline-flex; align-items: center; gap: .5rem; }
         .back-link:hover { color: var(--red-bright); }
         .footer-right { font-family: var(--mono); font-size: .52rem; color: var(--ink-dim); letter-spacing: .08em; }
     </style>
 </head>
 <body>
+    <div class="grain"></div>
     <div class="vignette"></div>
+    <div id="cursor-glow"></div>
 
     <div class="nav-bar" id="nav-bar">
         <div class="nav-inner">
@@ -183,38 +231,51 @@
     </div>
 
     <main>
-        <div class="eyebrow rv">
-            <span class="eyebrow-mark">06</span>
-            <span class="eyebrow-text">Guestbook</span>
-            <span class="eyebrow-line"></span>
+        <div class="gb-hero">
+            <div class="gb-kicker" id="gb-kicker">Transmission · Log · Open</div>
+            <h1 class="gb-title">
+                <span class="line"><span>Sign the</span></span>
+                <span class="line"><span><em>log.</em></span></span>
+            </h1>
+            <div class="gb-rule" id="gb-rule"></div>
+            <p class="gb-lede" id="gb-lede">A running record of who stopped by. Leave your name and a thought — it stays here, in order, for the next person to read.</p>
         </div>
-        <h1 class="rv">Sign the <em>log.</em></h1>
-        <p class="lede rv">A running record of who stopped by. Leave your name and a thought — it stays here, in order, for the next person to read.</p>
 
-        <div class="layout">
-            <div class="sign-card rv">
-                <div class="sign-label">New entry</div>
-                <form class="sign-form" id="sign-form" novalidate>
+        <div class="console-card" id="console-card">
+            <div class="console-head">
+                <span class="console-dot"></span>
+                <span class="console-label">New entry</span>
+                <span class="console-line"></span>
+            </div>
+            <form class="sign-form" id="sign-form" novalidate>
+                <div>
+                    <label class="field-label" for="gb-name">Name</label>
                     <input type="text" id="gb-name" name="name" placeholder="Your name (or make one up)" maxlength="30" required aria-label="Your name" autocomplete="off" />
-                    <textarea id="gb-message" name="message" placeholder="Say something..." maxlength="240" required aria-label="Your message"></textarea>
-                    <div class="char-count" id="gb-count">240 left</div>
-                    <!-- honeypot: real visitors never see or fill this in -->
-                    <div class="hp-field" aria-hidden="true">
-                        <label for="gb-website">Website</label>
-                        <input type="text" id="gb-website" name="website" tabindex="-1" autocomplete="off" />
-                    </div>
-                    <button type="submit" class="sign-submit" id="gb-submit">Sign it <i class="fas fa-arrow-right"></i></button>
-                </form>
-                <p class="sign-note">Entries are stored in a secure server and shown in the log. Be kind — this page is public.</p>
-            </div>
-
-            <div class="rv">
-                <div class="ledger-head">
-                    <span class="ledger-count" id="ledger-count">Loading —</span>
                 </div>
-                <div class="ledger" id="ledger"></div>
-            </div>
+                <div>
+                    <label class="field-label" for="gb-message">Message</label>
+                    <textarea id="gb-message" name="message" placeholder="Say something..." maxlength="240" required aria-label="Your message"></textarea>
+                </div>
+                <!-- honeypot: real visitors never see or fill this in -->
+                <div class="hp-field" aria-hidden="true">
+                    <label for="gb-website">Website</label>
+                    <input type="text" id="gb-website" name="website" tabindex="-1" autocomplete="off" />
+                </div>
+                <div class="console-foot">
+                    <span class="char-count" id="gb-count">240 left</span>
+                    <button type="submit" class="sign-submit" id="gb-submit">Transmit <i class="fas fa-arrow-right"></i></button>
+                </div>
+                <p class="sign-note">Entries are stored on a secure server and shown in the log below. Be kind — this page is public.</p>
+            </form>
         </div>
+
+        <div class="ledger-head" id="ledger-head">
+            <span class="ledger-mark">06</span>
+            <span class="ledger-text">Received</span>
+            <span class="ledger-line"></span>
+            <span class="ledger-count" id="ledger-count">Loading —</span>
+        </div>
+        <div class="ledger" id="ledger"></div>
     </main>
 
     <footer>
@@ -227,32 +288,37 @@
     <div id="toast-stack" role="status" aria-live="polite"></div>
 
     <script>
-        // Nav scroll shadow — self-contained, no dependency on the store/guestbook scripts.
+        // Nav scroll shadow + cursor glow — self-contained, no dependency on guestbook.js.
         (function () {
             const nav = document.getElementById('nav-bar');
-            if (!nav) return;
-            window.addEventListener('scroll', () => nav.classList.toggle('scrolled', window.scrollY > 40), { passive: true });
+            if (nav) window.addEventListener('scroll', () => nav.classList.toggle('scrolled', window.scrollY > 40), { passive: true });
+
+            const glow = document.getElementById('cursor-glow');
+            if (glow) {
+                document.addEventListener('mousemove', (e) => {
+                    glow.style.transform = `translate(${e.clientX}px, ${e.clientY}px) translate(-50%, -50%)`;
+                });
+                document.querySelectorAll('a, button, input, textarea, .entry').forEach((el) => {
+                    el.addEventListener('mouseenter', () => glow.classList.add('hover'));
+                    el.addEventListener('mouseleave', () => glow.classList.remove('hover'));
+                });
+            }
         })();
 
-        // Lightweight one-time scroll-reveal for the static header/form/ledger
-        // blocks. Deliberately not GSAP/ScrollTrigger — this page is a form
-        // and a list, not a motion showcase, so it stays as light as possible.
+        // One-shot GSAP entrance for the static header + console card. The
+        // ledger entries animate themselves (guestbook.js sets a per-row
+        // animation-delay and the .entry CSS keyframe above handles the rest),
+        // so nothing here ever touches #ledger's contents.
         (function () {
-            const els = document.querySelectorAll('.rv');
-            if (!els.length) return;
-            if (window.matchMedia('(prefers-reduced-motion: reduce)').matches || !('IntersectionObserver' in window)) {
-                els.forEach((el) => el.classList.add('in-view'));
-                return;
-            }
-            const obs = new IntersectionObserver((entries) => {
-                entries.forEach((entry) => {
-                    if (entry.isIntersecting) {
-                        entry.target.classList.add('in-view');
-                        obs.unobserve(entry.target);
-                    }
-                });
-            }, { threshold: 0.1, rootMargin: '0px 0px -60px 0px' });
-            els.forEach((el) => obs.observe(el));
+            const reduced = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+            if (reduced || !window.gsap) return;
+            gsap.timeline({ defaults: { ease: 'power4.out' } })
+                .to('#gb-kicker', { opacity: 1, duration: 0.9 }, 0.1)
+                .to('.gb-title .line span', { opacity: 1, y: 0, duration: 1.1, stagger: 0.1 }, 0.25)
+                .to('#gb-rule', { scaleX: 1, duration: 1.0, ease: 'power3.inOut' }, '-=0.6')
+                .to('#gb-lede', { opacity: 1, duration: 0.8 }, '-=0.5')
+                .to('#console-card', { opacity: 1, duration: 1.0 }, '-=0.4')
+                .to('#ledger-head', { opacity: 1, duration: 0.8 }, '-=0.4');
         })();
     </script>
 </body>

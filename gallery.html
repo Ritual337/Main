@@ -13,9 +13,10 @@
 <link rel="preconnect" href="https://cdnjs.cloudflare.com" />
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css" />
 <link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=IBM+Plex+Mono:ital,wght@0,400;0,500;0,600;0,700&family=Source+Serif+4:ital,wght@0,400;0,600;1,400&display=swap" rel="stylesheet" />
+<script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.5/gsap.min.js"></script>
 <style>
   :root {
-    --bg:#0a0908; --bg2:#121110; --bg3:#17140f; --paper:#f1ead9; --paper-dim:#cbc2ad; --ink:#8d8578;
+    --bg:#0a0908; --bg2:#121110; --bg3:#17140f; --paper:#f1ead9; --paper-dim:#cbc2ad; --ink:#8d8578; --ink-dim:#5c564c;
     --red:#d81f2f; --red-bright:#ff3346; --red-glow:rgba(216,31,47,.28); --red-glow-strong:rgba(255,51,70,.5);
     --line:#241f1a; --line-bright:#3a3229;
     --mono:'IBM Plex Mono',monospace; --serif:'Source Serif 4',Georgia,serif; --display:'Bebas Neue','IBM Plex Mono',sans-serif;
@@ -25,13 +26,23 @@
   }
   *,*::before,*::after{margin:0;padding:0;box-sizing:border-box;}
   html{scroll-behavior:smooth; scrollbar-width:thin; scrollbar-color: var(--line-bright) transparent;}
-  body{ background:var(--bg); color:var(--paper-dim); font-family:var(--serif); min-height:100vh; -webkit-font-smoothing:antialiased; cursor: crosshair; }
+  body{ background:var(--bg); color:var(--paper-dim); font-family:var(--serif); min-height:100vh; -webkit-font-smoothing:antialiased; cursor: crosshair; overflow-x: hidden; }
   body.overlay-open{ overflow:hidden; }
   img{ max-width:100%; display:block; }
   button { font: inherit; }
   :focus-visible{ outline:2px solid var(--red-bright); outline-offset:3px; border-radius:1px; }
 
+  .grain { position: fixed; inset: -100px; z-index: 2; pointer-events: none; opacity: 0.05; mix-blend-mode: overlay;
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='120' height='120'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='2' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E"); }
   .vignette{ position:fixed; inset:0; pointer-events:none; z-index:0; background:radial-gradient(ellipse at center, transparent 45%, rgba(0,0,0,.78) 100%); }
+  #cursor-glow {
+    position: fixed; pointer-events: none; z-index: 9997; top: 0; left: 0; width: 90px; height: 90px; border-radius: 50%;
+    background: radial-gradient(circle, rgba(216,31,47,.2) 0%, rgba(216,31,47,.05) 50%, transparent 70%);
+    will-change: transform; transition: width .35s var(--ease-out), height .35s var(--ease-out); mix-blend-mode: screen;
+  }
+  #cursor-glow.hover { width: 150px; height: 150px; background: radial-gradient(circle, rgba(255,51,70,.3) 0%, rgba(216,31,47,.09) 50%, transparent 70%); }
+  @media (max-width: 860px), (hover: none) { #cursor-glow { display: none; } }
+  @media (prefers-reduced-motion: reduce) { #cursor-glow { display: none !important; } }
 
   /* ===== nav ===== */
   .nav-bar{
@@ -48,27 +59,30 @@
   .nav-logo-text em{ color:var(--red-bright); font-style:normal; }
   .nav-status{ font-family:var(--mono); font-size:.6rem; color:var(--ink); letter-spacing:.1em; text-transform:uppercase; }
 
-  main.section{ position:relative; z-index:1; padding: calc(var(--nav-h) + 3rem) 2rem 6rem; max-width:1400px; margin:0 auto; }
-  .eyebrow{ display:flex; align-items:center; gap:1rem; margin-bottom:1.4rem; flex-wrap:wrap; }
-  .eyebrow-num{ font-family:var(--mono); font-size:.62rem; letter-spacing:.18em; color:var(--bg); background:var(--red); padding:.25rem .5rem; border-radius:2px; }
-  .eyebrow-text{ font-family:var(--mono); font-size:.62rem; letter-spacing:.3em; text-transform:uppercase; color:var(--paper); }
-  .eyebrow-line{ flex:1; height:1px; background:var(--line-bright); }
-  .eyebrow-meta{ font-family:var(--mono); font-size:.52rem; color:var(--ink-dim); letter-spacing:.04em; white-space:nowrap; }
+  main.section{ position:relative; z-index:1; padding: calc(var(--nav-h) + 4rem) 2rem 6rem; max-width:1400px; margin:0 auto; }
 
-  .section-title{ font-family:var(--display); font-size:clamp(2.4rem,6vw,4.2rem); letter-spacing:.02em; color:var(--paper); text-transform:uppercase; line-height:.9; }
-  .section-note{ font-family:var(--mono); font-style:normal; font-size:.68rem; color:var(--ink); letter-spacing:.03em; margin:1rem 0 1.5rem; max-width:56ch; line-height:1.8; }
+  /* ===== hero header (matches guestbook's language) ===== */
+  .gal-hero { text-align: center; margin-bottom: 4rem; }
+  .gal-kicker { font-family: var(--mono); font-size: .62rem; letter-spacing: .34em; text-transform: uppercase; color: var(--red-bright); margin-bottom: 1.6rem; opacity: 0; }
+  .gal-kicker::before { content: '◆ '; }
+  .gal-title { font-family: var(--display); font-weight: 400; text-transform: uppercase; font-size: clamp(3rem, 9vw, 6rem); letter-spacing: .01em; line-height: .9; color: var(--paper); }
+  .gal-title .line { display: block; overflow: hidden; }
+  .gal-title .line span { display: block; opacity: 0; transform: translateY(110%); }
+  .gal-rule { width: 180px; height: 1px; margin: 1.8rem auto 1.6rem; background-image: repeating-linear-gradient(90deg, var(--line-bright) 0 6px, transparent 6px 12px); transform: scaleX(0); transform-origin: center; }
+  .gal-lede { font-family: var(--mono); font-size: .7rem; color: var(--ink); max-width: 56ch; margin: 0 auto; line-height: 1.9; letter-spacing: .02em; opacity: 0; }
+  .gal-meta { font-family: var(--mono); font-size: .52rem; color: var(--ink-dim); letter-spacing: .1em; margin-top: 1.2rem; text-transform: uppercase; opacity: 0; }
 
   /* search */
-  .search-area{ display:flex; gap:.8rem; margin-bottom:2rem; flex-wrap:wrap; align-items:center; }
+  .search-area{ display:flex; gap:.8rem; margin-bottom:2.5rem; flex-wrap:wrap; align-items:center; justify-content: center; opacity: 0; }
   .search-area input{
-    flex:1; min-width:200px; background:var(--bg2); border:1px solid var(--line-bright); color:var(--paper);
-    font-family:var(--mono); font-size:.7rem; padding:.6rem .8rem; transition:border-color var(--dur-base); border-radius: 2px;
+    flex:1; max-width: 420px; min-width:200px; background:var(--bg2); border:1px solid var(--line-bright); color:var(--paper);
+    font-family:var(--mono); font-size:.7rem; padding:.7rem .9rem; transition:border-color var(--dur-base), box-shadow var(--dur-base); border-radius: 2px;
   }
-  .search-area input:focus{ outline:none; border-color:var(--red-bright); }
+  .search-area input:focus{ outline:none; border-color:var(--red-bright); box-shadow: 0 0 0 3px var(--red-glow); }
   .search-area input::placeholder{ color:var(--ink-dim); }
   .search-clear{
     background:none; border:1px solid var(--line-bright); color:var(--ink); font-family:var(--mono);
-    font-size:.55rem; letter-spacing: .08em; text-transform: uppercase; padding:.6rem .9rem; cursor:pointer; transition:border-color var(--dur-base),color var(--dur-base); border-radius: 2px;
+    font-size:.55rem; letter-spacing: .08em; text-transform: uppercase; padding:.7rem 1rem; cursor:pointer; transition:border-color var(--dur-base),color var(--dur-base); border-radius: 2px;
   }
   .search-clear:hover{ border-color:var(--red-bright); color:var(--red-bright); }
 
@@ -84,11 +98,17 @@
   .gallery-grid{ background: var(--line); border: 1px solid var(--line); transition: opacity .3s; }
   .gallery-grid.fade{ opacity:0; }
 
-  @keyframes cardIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
-  .gallery-card { animation: cardIn .5s var(--ease-out) backwards; }
+  @keyframes cardIn { from { opacity: 0; transform: translateY(16px) scale(.97); } to { opacity: 1; transform: translateY(0) scale(1); } }
+  .gallery-card { animation: cardIn .6s var(--ease-out) backwards; }
   @media (prefers-reduced-motion: reduce) { .gallery-card { animation: none; } }
+  /* Staggered entrance for freshly-rendered cards — gallery.js rebuilds the
+     grid's innerHTML on every render, so nth-child delays re-fire naturally
+     on every search/page/poll update without any JS changes needed here. */
+  .gallery-grid.layout-grid .gallery-card:nth-child(n),
+  .gallery-grid.layout-fixed .gallery-card:nth-child(n),
+  .gallery-grid.layout-masonry .gallery-card:nth-child(n) { animation-delay: calc(var(--card-i, 0) * 35ms); }
 
-  /* layout modes — same contact-sheet hover language as the main site's Frames grid */
+  /* layout modes — contact-sheet hover language matching the main site's Frames grid */
   .gallery-grid.layout-grid { display:grid; grid-template-columns:repeat(5,1fr); gap:1px; }
   .gallery-grid.layout-grid .gallery-card { display:block; width:100%; aspect-ratio: 1/1; position:relative; background:var(--bg2); border:none; padding:0; cursor:zoom-in; overflow: hidden; }
   .gallery-grid.layout-grid .gallery-card img { width:100%; height:100%; object-fit:cover; filter:grayscale(80%) brightness(.5); transition:filter .45s ease, transform .5s var(--ease-out); }
@@ -157,18 +177,19 @@
   .pagination{ display:flex; justify-content:center; gap:.4rem; margin-top:2rem; flex-wrap:wrap; }
   .pagination button{
     background:var(--bg2); border:1px solid var(--line); color:var(--ink); font-family:var(--mono);
-    font-size:.55rem; padding:.5rem .85rem; cursor:pointer; transition:border-color var(--dur-base),color var(--dur-base); border-radius: 2px;
+    font-size:.55rem; padding:.5rem .85rem; cursor:pointer; transition:border-color var(--dur-base),color var(--dur-base), transform var(--dur-fast); border-radius: 2px;
   }
-  .pagination button:hover{ border-color:var(--red-bright); color:var(--red-bright); }
+  .pagination button:hover{ border-color:var(--red-bright); color:var(--red-bright); transform: translateY(-2px); }
   .pagination button.active{ border-color:var(--red-bright); color:var(--red-bright); background:var(--red-glow); }
-  .pagination button:disabled{ opacity:.3; cursor:not-allowed; }
+  .pagination button:disabled{ opacity:.3; cursor:not-allowed; transform: none; }
 
-  /* toast (fallback defined inline in gallery.js also creates this, kept for initial paint) */
   #toast-stack { position: fixed; bottom: 2rem; left: 50%; transform: translateX(-50%); z-index: 9999; display: flex; flex-direction: column; align-items: center; gap: .5rem; pointer-events: none; max-width: 90vw; }
 </style>
 </head>
 <body>
+<div class="grain"></div>
 <div class="vignette"></div>
+<div id="cursor-glow"></div>
 
 <nav class="nav-bar" id="nav-bar">
   <div class="nav-inner">
@@ -180,17 +201,19 @@
 </nav>
 
 <main class="section">
-  <div class="eyebrow">
-    <span class="eyebrow-num">07</span>
-    <span class="eyebrow-text">Gallery</span>
-    <span class="eyebrow-line"></span>
-    <span class="eyebrow-meta" id="gallery-meta"></span>
+  <div class="gal-hero">
+    <div class="gal-kicker" id="gal-kicker">Unlisted · Unindexed · Open</div>
+    <h1 class="gal-title">
+      <span class="line"><span>Full</span></span>
+      <span class="line"><span>Archive</span></span>
+    </h1>
+    <div class="gal-rule" id="gal-rule"></div>
+    <p class="gal-lede" id="gal-lede">The complete set, unlisted and unindexed. Tap any frame to open it full-size.</p>
+    <p class="gal-meta" id="gallery-meta"></p>
   </div>
-  <h1 class="section-title">Full Archive</h1>
-  <p class="section-note">The complete set, unlisted and unindexed. Tap any frame to open it full-size.</p>
 
   <!-- Search -->
-  <div class="search-area">
+  <div class="search-area" id="search-area">
     <input type="text" id="search-input" placeholder="Search by caption..." />
     <button class="search-clear" id="search-clear">Clear</button>
   </div>
@@ -219,8 +242,58 @@
 <script>
   (function () {
     const nav = document.getElementById('nav-bar');
-    if (!nav) return;
-    window.addEventListener('scroll', () => nav.classList.toggle('scrolled', window.scrollY > 40), { passive: true });
+    if (nav) window.addEventListener('scroll', () => nav.classList.toggle('scrolled', window.scrollY > 40), { passive: true });
+
+    const glow = document.getElementById('cursor-glow');
+    if (glow) {
+      document.addEventListener('mousemove', (e) => {
+        glow.style.transform = `translate(${e.clientX}px, ${e.clientY}px) translate(-50%, -50%)`;
+      });
+      document.body.addEventListener('mouseover', (e) => {
+        if (e.target.closest('a, button, .gallery-card')) glow.classList.add('hover');
+      });
+      document.body.addEventListener('mouseout', (e) => {
+        if (e.target.closest('a, button, .gallery-card')) glow.classList.remove('hover');
+      });
+    }
+  })();
+
+  // One-shot GSAP entrance for the static header/search chrome. Card-level
+  // stagger is handled entirely by the CSS nth-child rule above + a tiny
+  // MutationObserver below that stamps a --card-i custom property onto each
+  // freshly-rendered card — additive only, gallery.js's own render() logic
+  // is never touched.
+  (function () {
+    const reduced = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+    if (!reduced && window.gsap) {
+      gsap.timeline({ defaults: { ease: 'power4.out' } })
+        .to('#gal-kicker', { opacity: 1, duration: 0.9 }, 0.1)
+        .to('.gal-title .line span', { opacity: 1, y: 0, duration: 1.1, stagger: 0.1 }, 0.25)
+        .to('#gal-rule', { scaleX: 1, duration: 1.0, ease: 'power3.inOut' }, '-=0.6')
+        .to('#gal-lede', { opacity: 1, duration: 0.8 }, '-=0.5')
+        .to('#gallery-meta', { opacity: 1, duration: 0.8 }, '-=0.6')
+        .to('#search-area', { opacity: 1, duration: 0.8 }, '-=0.5');
+    } else {
+      ['gal-kicker', 'gal-lede', 'gallery-meta', 'search-area'].forEach((id) => {
+        const el = document.getElementById(id);
+        if (el) el.style.opacity = 1;
+      });
+      document.querySelectorAll('.gal-title .line span').forEach((el) => { el.style.opacity = 1; el.style.transform = 'none'; });
+    }
+  })();
+
+  // Stamp a --card-i index onto gallery cards as gallery.js renders them,
+  // purely for the CSS stagger-delay rule above. Read-only observer —
+  // never mutates anything gallery.js manages itself.
+  (function () {
+    const grid = document.getElementById('gallery-grid');
+    if (!grid || !('MutationObserver' in window)) return;
+    const stamp = () => {
+      grid.querySelectorAll(':scope > .gallery-card').forEach((card, i) => {
+        card.style.setProperty('--card-i', i);
+      });
+    };
+    new MutationObserver(stamp).observe(grid, { childList: true });
   })();
 </script>
 <script src="js/toast.js"></script>

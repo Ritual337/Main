@@ -17,6 +17,7 @@
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
     <link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=IBM+Plex+Mono:ital,wght@0,400;0,500;0,600;0,700;1,400&family=Source+Serif+4:ital,wght@0,400;0,500;0,600;0,700;1,400;1,500;1,600&display=swap" rel="stylesheet" />
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css" />
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.5/gsap.min.js"></script>
 
     <style>
         :root {
@@ -35,9 +36,21 @@
         html { scroll-behavior: smooth; scrollbar-width: thin; scrollbar-color: var(--line-bright) transparent; }
         body {
             background: var(--bg); color: var(--paper-dim); font-family: var(--serif); min-height: 100vh;
-            overflow-x: hidden; -webkit-font-smoothing: antialiased; -moz-osx-font-smoothing: grayscale;
+            overflow-x: hidden; -webkit-font-smoothing: antialiased; -moz-osx-font-smoothing: grayscale; cursor: crosshair;
         }
         a { color: inherit; text-decoration: none; }
+
+        .grain { position: fixed; inset: -100px; z-index: 2; pointer-events: none; opacity: 0.05; mix-blend-mode: overlay;
+            background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='120' height='120'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='2' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E"); }
+        .vignette { position: fixed; inset: 0; pointer-events: none; z-index: 1; background: radial-gradient(ellipse at center, transparent 40%, rgba(0,0,0,0.75) 100%); }
+        #cursor-glow {
+            position: fixed; pointer-events: none; z-index: 9997; top: 0; left: 0; width: 90px; height: 90px; border-radius: 50%;
+            background: radial-gradient(circle, rgba(232,178,58,.18) 0%, rgba(232,178,58,.05) 50%, transparent 70%);
+            will-change: transform; transition: width .35s var(--ease-out), height .35s var(--ease-out); mix-blend-mode: screen;
+        }
+        #cursor-glow.hover { width: 150px; height: 150px; background: radial-gradient(circle, rgba(255,51,70,.28) 0%, rgba(216,31,47,.08) 50%, transparent 70%); }
+        @media (max-width: 860px), (hover: none) { #cursor-glow { display: none; } }
+        @media (prefers-reduced-motion: reduce) { #cursor-glow { display: none !important; } }
 
         /* ===== nav ===== */
         .nav-bar {
@@ -70,37 +83,43 @@
         }
         @media (max-width: 860px) { .book-hero { min-height: calc(100vh - var(--nav-h-m)); padding: 4rem 1.2rem 3rem; } }
 
-        .book-kicker { font-family: var(--mono); font-size: .62rem; letter-spacing: .3em; text-transform: uppercase; color: var(--gold); margin-bottom: 2.2rem; }
+        .book-kicker { font-family: var(--mono); font-size: .62rem; letter-spacing: .3em; text-transform: uppercase; color: var(--gold); margin-bottom: 2.2rem; opacity: 0; }
         .book-kicker::before { content: '◆ '; }
 
-        .book-cover-wrap { perspective: 1600px; margin-bottom: 2.2rem; }
+        .book-cover-wrap { perspective: 1600px; margin-bottom: 2.2rem; position: relative; opacity: 0; }
+        .book-glow-ring {
+            position: absolute; left: 50%; top: 50%; width: 380px; height: 380px; transform: translate(-50%, -50%);
+            border-radius: 50%; background: radial-gradient(circle, rgba(232,178,58,.14) 0%, rgba(216,31,47,.06) 45%, transparent 72%);
+            pointer-events: none; z-index: 0; animation: ringBreathe 5s ease-in-out infinite;
+        }
+        @keyframes ringBreathe { 0%,100% { transform: translate(-50%,-50%) scale(1); opacity: .85; } 50% { transform: translate(-50%,-50%) scale(1.08); opacity: 1; } }
+        @media (prefers-reduced-motion: reduce) { .book-glow-ring { animation: none; } }
         .book-cover {
-            width: 230px; height: 330px; position: relative; border-radius: 3px; transform-style: preserve-3d;
+            width: 230px; height: 330px; position: relative; border-radius: 3px; transform-style: preserve-3d; z-index: 1;
             background: linear-gradient(155deg, var(--bg3), var(--bg4) 60%, #221d17); border: 1px solid var(--line-bright);
             box-shadow: 0 30px 70px rgba(0, 0, 0, .65), inset 0 0 0 1px rgba(241, 234, 217, .03);
-            animation: coverOpen 1.5s cubic-bezier(.16, 1, .3, 1) both, coverFloat 6s ease-in-out 1.5s infinite;
+            animation: coverFloat 6s ease-in-out infinite;
             display: flex; flex-direction: column; align-items: center; justify-content: center; padding: 1.6rem;
             transition: transform .4s ease; cursor: default;
         }
         .book-cover::before { content: ''; position: absolute; left: 0; top: 0; bottom: 0; width: 14px; background: linear-gradient(90deg, rgba(0, 0, 0, .5), transparent); border-radius: 3px 0 0 3px; }
-        @keyframes coverOpen { 0% { opacity: 0; transform: rotateY(-38deg) rotateX(4deg) scale(.86); } 100% { opacity: 1; transform: rotateY(0) rotateX(0) scale(1); } }
         @keyframes coverFloat { 0%, 100% { transform: translateY(0) rotateX(0); } 50% { transform: translateY(-8px) rotateX(1.5deg); } }
-        @media (prefers-reduced-motion: reduce) { .book-cover { animation: none; opacity: 1; } }
+        @media (prefers-reduced-motion: reduce) { .book-cover { animation: none; } }
 
         .book-cover-emblem { width: 92px; height: 92px; margin-bottom: 1.3rem; flex-shrink: 0; }
         .book-cover-title { font-family: var(--display); font-size: 2rem; letter-spacing: .06em; color: var(--paper); line-height: 1; }
         .book-cover-sub { font-family: var(--serif); font-style: italic; font-size: .68rem; color: var(--ink); margin-top: .6rem; max-width: 16ch; line-height: 1.4; }
         .book-cover-author { font-family: var(--mono); font-size: .5rem; letter-spacing: .16em; text-transform: uppercase; color: var(--red-bright); margin-top: 1.2rem; }
 
-        .book-tagline { font-family: var(--serif); font-style: italic; font-size: 1.15rem; color: var(--paper-dim); max-width: 42ch; margin: 0 auto 1.6rem; line-height: 1.6; }
+        .book-tagline { font-family: var(--serif); font-style: italic; font-size: 1.15rem; color: var(--paper-dim); max-width: 42ch; margin: 0 auto 1.6rem; line-height: 1.6; opacity: 0; }
         .book-meta-row {
             display: flex; gap: 1.6rem; flex-wrap: wrap; justify-content: center; font-family: var(--mono); font-size: .55rem;
-            letter-spacing: .1em; text-transform: uppercase; color: var(--ink-dim); margin-bottom: 2rem;
+            letter-spacing: .1em; text-transform: uppercase; color: var(--ink-dim); margin-bottom: 2rem; opacity: 0;
         }
         .book-meta-row span strong { color: var(--paper-dim); font-weight: 500; }
 
         /* ===== download button ===== */
-        .download-wrap { margin-top: 0.5rem; }
+        .download-wrap { margin-top: 0.5rem; opacity: 0; }
         .download-btn {
             display: inline-flex; align-items: center; gap: 0.7rem; font-family: var(--mono); font-size: .62rem;
             letter-spacing: .14em; text-transform: uppercase; color: var(--paper); background: transparent;
@@ -112,14 +131,15 @@
         .download-btn:hover i { transform: translateY(-2px); }
         .download-btn:active { transform: scale(.96); }
 
-        /* ===== entrance (lightweight, no GSAP on this single-view page) ===== */
-        .rv { opacity: 0; transform: translateY(20px); transition: opacity .9s var(--ease-out), transform .9s var(--ease-out); }
-        .rv.in-view { opacity: 1; transform: translateY(0); }
-        .book-cover-wrap.rv { transform: none; } /* the cover has its own coverOpen keyframe already */
-        @media (prefers-reduced-motion: reduce) { .rv { opacity: 1 !important; transform: none !important; transition: none !important; } }
+        @media (prefers-reduced-motion: reduce) {
+            .book-kicker, .book-cover-wrap, .book-tagline, .book-meta-row, .download-wrap { opacity: 1 !important; }
+        }
     </style>
 </head>
 <body>
+    <div class="grain"></div>
+    <div class="vignette"></div>
+    <div id="cursor-glow"></div>
 
     <nav class="nav-bar" id="nav-bar">
         <div class="nav-inner">
@@ -133,9 +153,10 @@
 
     <main>
         <section class="book-hero">
-            <div class="book-kicker rv">SAPIENS: A brief history of humankind</div>
+            <div class="book-kicker" id="book-kicker">SAPIENS: A brief history of humankind</div>
 
-            <div class="book-cover-wrap">
+            <div class="book-cover-wrap" id="book-cover-wrap">
+                <div class="book-glow-ring"></div>
                 <div class="book-cover" id="book-cover">
                     <svg class="book-cover-emblem" viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg">
                         <circle cx="50" cy="50" r="30" fill="none" stroke="#e8b23a" stroke-width="1" opacity="0.55"/>
@@ -153,16 +174,16 @@
                 </div>
             </div>
 
-            <p class="book-tagline rv">"Three revolutions — cognitive, agricultural, scientific — and one very talkative ape who ended up running the place."</p>
+            <p class="book-tagline" id="book-tagline">"Three revolutions — cognitive, agricultural, scientific — and one very talkative ape who ended up running the place."</p>
 
-            <div class="book-meta-row rv">
+            <div class="book-meta-row" id="book-meta-row">
                 <span>About · <strong>History</strong></span>
                 <span>Pages · <strong>439</strong></span>
                 <span>Status · <strong>Suggested</strong></span>
             </div>
 
             <!-- Download button -->
-            <div class="download-wrap rv">
+            <div class="download-wrap" id="download-wrap">
                 <a href="src/res/SapiensABriefHistoryofHumankind.pdf" download class="download-btn">
                     <i class="fas fa-file-pdf"></i>
                     <span>Download PDF</span>
@@ -177,6 +198,19 @@
         window.addEventListener('scroll', () => {
             navBar.classList.toggle('scrolled', window.scrollY > 40);
         }, { passive: true });
+
+        // ---- cursor glow ----
+        (function () {
+            const glow = document.getElementById('cursor-glow');
+            if (!glow) return;
+            document.addEventListener('mousemove', (e) => {
+                glow.style.transform = `translate(${e.clientX}px, ${e.clientY}px) translate(-50%, -50%)`;
+            });
+            document.querySelectorAll('a, .book-cover').forEach((el) => {
+                el.addEventListener('mouseenter', () => glow.classList.add('hover'));
+                el.addEventListener('mouseleave', () => glow.classList.remove('hover'));
+            });
+        })();
 
         // ---- cover tilt on mouse move ----
         const cover = document.getElementById('book-cover');
@@ -194,17 +228,16 @@
             });
         }
 
-        // ---- lightweight one-time reveal for the text below the cover ----
+        // ---- real GSAP entrance timeline ----
         (function () {
-            const els = document.querySelectorAll('.rv');
-            if (!els.length || window.matchMedia('(prefers-reduced-motion: reduce)').matches) {
-                els.forEach((el) => el.classList.add('in-view'));
-                return;
-            }
-            // Everything is above the fold on this single-view page, so just
-            // stagger them in shortly after paint rather than wiring an
-            // IntersectionObserver for content that's already visible.
-            els.forEach((el, i) => setTimeout(() => el.classList.add('in-view'), 150 + i * 120));
+            const reduced = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+            if (reduced || !window.gsap) return;
+            gsap.timeline({ defaults: { ease: 'expo.out' } })
+                .to('#book-kicker', { opacity: 1, duration: 0.8 }, 0.1)
+                .fromTo('#book-cover-wrap', { opacity: 0, scale: 0.86, rotateY: -30 }, { opacity: 1, scale: 1, rotateY: 0, duration: 1.3 }, 0.25)
+                .to('#book-tagline', { opacity: 1, duration: 0.9 }, '-=0.5')
+                .to('#book-meta-row', { opacity: 1, duration: 0.8 }, '-=0.55')
+                .to('#download-wrap', { opacity: 1, duration: 0.8 }, '-=0.5');
         })();
     </script>
 
