@@ -80,7 +80,7 @@ async function loadImages() {
   // Update metadata
   if (allImages.length > 0) {
     const last = allImages[0];
-    meta.textContent = `${allImages.length} frames · last ${formatDate(last.createdAt || Date.now())}`;
+    meta.textContent = `${allImages.length} frames · last ${formatDate(last.uploaded_at || Date.now())}`;
   } else {
     meta.textContent = '0 frames';
   }
@@ -160,7 +160,7 @@ function render() {
   grid.innerHTML = pageImages.map((img, i) => `
     <button class="gallery-card" data-index="${start + i}" type="button">
       <span class="gallery-num">${String(start + i + 1).padStart(2, '0')}</span>
-      <img src="${img.src}" alt="${img.caption || ''}" loading="lazy" />
+      <img src="${img.src}" alt="${img.caption || ''}" loading="lazy" decoding="async" />
       <span class="gallery-cap">${img.caption || ''}</span>
     </button>
   `).join('');
@@ -196,7 +196,7 @@ function openLightbox(images, index) {
 function showLightboxImage() {
   const img = lbImages[lbIndex];
   const el = document.getElementById('lightbox-img');
-  el.src = img.src;
+  el.src = img.full || img.src;
   el.alt = img.caption || '';
   document.getElementById('lightbox-caption').textContent = img.caption || '';
 }
@@ -275,7 +275,7 @@ function startPolling() {
         filteredImages = [...allImages];
         if (allImages.length > 0) {
           const last = allImages[0];
-          meta.textContent = `${allImages.length} frames · last ${formatDate(last.createdAt || Date.now())}`;
+          meta.textContent = `${allImages.length} frames · last ${formatDate(last.uploaded_at || Date.now())}`;
         }
         applySearch(); // re-apply search and re-render
         window.showToast('Gallery updated.');

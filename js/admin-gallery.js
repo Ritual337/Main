@@ -76,7 +76,7 @@ document.addEventListener('DOMContentLoaded', async () => {
         <div class="checkbox-wrap">
           <input type="checkbox" class="image-checkbox" data-id="${img.id}" />
         </div>
-        <img src="https://res.cloudinary.com/${CLOUD_NAME}/image/upload/${img.filename}" alt="${img.caption}" loading="lazy" />
+        <img src="https://res.cloudinary.com/${CLOUD_NAME}/image/upload/w_600,q_auto,f_auto/${img.filename}" alt="${img.caption}" loading="lazy" decoding="async" />
         <div class="caption">${img.caption || 'Untitled'}</div>
         <div class="meta">${img.uploaded_at ? '📅 ' + formatDate(img.uploaded_at) : ''}</div>
         <button class="delete-btn" data-id="${img.id}">Delete</button>
