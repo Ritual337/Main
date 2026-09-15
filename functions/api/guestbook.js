@@ -1,9 +1,9 @@
 import { verifyJWT } from './_jwt.js';
+import { checkRateLimit } from './_ratelimit.js';
 
 export async function onRequest(context) {
   const { request, env } = context;
 
-  // GET – list all entries
   if (request.method === 'GET') {
     const { results } = await env.DB.prepare('SELECT * FROM entries ORDER BY createdAt DESC').all();
     return new Response(JSON.stringify(results), {
@@ -11,8 +11,18 @@ export async function onRequest(context) {
     });
   }
 
-  // POST – add a new entry
   if (request.method === 'POST') {
+    const ip = request.headers.get('cf-connecting-ip') || 'unknown';
+    const key = `gb:post:${ip}`;
+
+    const rl = await checkRateLimit(env.DB, key, 3, 60 * 1000);
+    if (!rl.allowed) {
+      return new Response(
+        JSON.stringify({ error: 'Slow down — one message every 20 seconds.' }),
+        { status: 429, headers: { 'Content-Type': 'application/json' } }
+      );
+    }
+
     let body;
     try {
       body = await request.json();
@@ -47,7 +57,6 @@ export async function onRequest(context) {
     });
   }
 
-  // DELETE – clear all entries (admin only)
   if (request.method === 'DELETE') {
     const authHeader = request.headers.get('Authorization');
     if (!authHeader || !authHeader.startsWith('Bearer ')) {
