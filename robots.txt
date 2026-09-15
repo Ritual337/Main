@@ -1,0 +1,12 @@
+User-agent: *
+Allow: /
+
+# Private / backend routes — never index these
+Disallow: /api/
+Disallow: /admin
+Disallow: /login
+
+# Not disallowed on purpose: easteregg.html (has meta noindex, fine if found)
+# Not disallowed on purpose: 404.html (has meta noindex, fine if found)
+
+Sitemap: https://r3ign.pages.dev/sitemap.xml
