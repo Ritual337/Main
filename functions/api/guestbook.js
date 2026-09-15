@@ -13,17 +13,34 @@ export async function onRequest(context) {
 
   // POST – add a new entry
   if (request.method === 'POST') {
-    const body = await request.json();
-    const name = (body.name || '').trim().slice(0, 30) || 'someone';
-    const message = (body.message || '').trim().slice(0, 240);
+    let body;
+    try {
+      body = await request.json();
+    } catch {
+      return new Response(JSON.stringify({ error: 'Invalid JSON' }), { status: 400 });
+    }
+
+    if (!body || typeof body !== 'object') {
+      return new Response(JSON.stringify({ error: 'Invalid payload' }), { status: 400 });
+    }
+
+    const rawName = typeof body.name === 'string' ? body.name : '';
+    const rawMessage = typeof body.message === 'string' ? body.message : '';
+
+    const name = rawName.trim().slice(0, 30) || 'someone';
+    const message = rawMessage.trim().slice(0, 240);
+
     if (!message) {
       return new Response(JSON.stringify({ error: 'Message is required' }), { status: 400 });
     }
+
     const id = 'g_' + Date.now().toString(36) + '_' + Math.random().toString(36).slice(2, 8);
     const createdAt = Date.now();
+
     await env.DB.prepare('INSERT INTO entries (id, name, message, createdAt) VALUES (?, ?, ?, ?)')
       .bind(id, name, message, createdAt)
       .run();
+
     return new Response(JSON.stringify({ id, name, message, createdAt }), {
       status: 201,
       headers: { 'Content-Type': 'application/json' },
