@@ -428,6 +428,20 @@
         active = true;
         buf = '';
 
+        // Close every overlay that could currently be open.
+        document.querySelectorAll(
+            '.card-overlay.active, .poem-overlay.active, .glitch-overlay.active, .lightbox.active, .music-player-overlay.active, .mobile-menu.active'
+        ).forEach(el => el.classList.remove('active'));
+        document.body.classList.remove('overlay-open');
+
+        // Drop focus from anything that has it.
+        if (document.activeElement && typeof document.activeElement.blur === 'function') {
+            document.activeElement.blur();
+        }
+
+        // Freeze the page — no clicks, hovers, or focus for the duration.
+        document.body.classList.add('ritual-active');
+
         window.showToast?.('you found it. hi.', { duration: FLICKER_MS });
         document.body.classList.add('ritual-glitch');
 
@@ -455,27 +469,128 @@
                 scan.classList.add('active');
             }
 
+            const vh = window.innerHeight;
+            const scanStartY = -0.1 * vh;
+            const scanTravel = 1.2 * vh;
+            const startTime = performance.now();
+
+            // Skip anything already invisible — inline styles would otherwise
+            // force hidden overlays to reveal themselves as the wipe touched them.
             const targets = Array.from(document.body.children)
-                .filter(el => el.id !== 'wipe-scan');
+                .filter(el => el.id !== 'wipe-scan')
+                .filter(el => {
+                    const cs = getComputedStyle(el);
+                    if (cs.display === 'none') return false;
+                    if (cs.visibility === 'hidden') return false;
+                    if (parseFloat(cs.opacity) === 0) return false;
+                    return true;
+                })
+                .map(el => {
+                    const r = el.getBoundingClientRect();
+                    el.style.transition = 'none';
+                    return { el, top: r.top, bottom: r.bottom, finished: false };
+                })
+                .filter(t => t.bottom > -50);
 
-            const step = ERASE_MS / Math.max(targets.length, 1);
+            function tick() {
+                const elapsed = performance.now() - startTime;
+                const progress = Math.min(elapsed / ERASE_MS, 1);
+                const scanY = scanStartY + progress * scanTravel;
 
-            targets.forEach((el, i) => {
-                setTimeout(() => {
-                    el.classList.add('erase-target');
-                    void el.offsetWidth;
-                    el.classList.add('erased');
-                }, i * step);
-            });
+                for (const t of targets) {
+                    if (t.finished) continue;
+                    if (scanY < t.top) continue;
 
-            setTimeout(() => {
+                    if (scanY >= t.bottom) {
+                        t.el.style.clipPath = 'inset(100% 0 0 0)';
+                        t.el.style.opacity = '0';
+                        t.el.style.filter = 'blur(7px) brightness(0)';
+                        t.el.style.transform = 'translateY(-10px) scale(0.985)';
+                        t.el.style.pointerEvents = 'none';
+                        t.finished = true;
+                    } else {
+                        const h = (t.bottom - t.top) || 1;
+                        const clipPct = ((scanY - t.top) / h) * 100;
+                        t.el.style.clipPath = `inset(${clipPct}% 0 0 0)`;
+                        const fadePct = Math.min(100, clipPct * 1.15);
+                        t.el.style.opacity = String(1 - fadePct / 100);
+                    }
+                }
+
+                if (progress < 1) {
+                    requestAnimationFrame(tick);
+                } else {
+                    wipeEverything();
+                }
+            }
+
+            requestAnimationFrame(tick);
+        }
+
+        // ---- The real client-side delete -----------------------------------
+        // Everything the browser was holding for this origin goes. Storage,
+        // caches, service workers, cookies, then the document itself.
+        async function wipeEverything() {
+            // Small pause so the last frame of the scan has time to render.
+            await new Promise(r => setTimeout(r, 400));
+
+            // 1. localStorage — audit logs, gallery layout, anything else.
+            try { localStorage.clear(); } catch (_) {}
+
+            // 2. sessionStorage — admin token, gallery token, lockout timers.
+            try { sessionStorage.clear(); } catch (_) {}
+
+            // 3. Cache Storage — Cloudflare Pages caches HTML/JS/CSS here.
+            try {
+                const keys = await caches.keys();
+                await Promise.all(keys.map(k => caches.delete(k)));
+            } catch (_) {}
+
+            // 4. Service workers — none registered, but clear any stragglers.
+            try {
+                if ('serviceWorker' in navigator) {
+                    const regs = await navigator.serviceWorker.getRegistrations();
+                    await Promise.all(regs.map(r => r.unregister()));
+                }
+            } catch (_) {}
+
+            // 5. Cookies — expiry-hijack each one.
+            try {
+                document.cookie.split(';').forEach(c => {
+                    const name = c.replace(/^ +/, '').split('=')[0];
+                    document.cookie = name + '=;expires=' + new Date(0).toUTCString() + ';path=/';
+                    document.cookie = name + '=;expires=' + new Date(0).toUTCString() + ';path=/;domain=' + location.hostname;
+                });
+            } catch (_) {}
+
+            // 6. Strip any URL query params (deep-linked ?image=... etc).
+            try { history.replaceState({}, '', location.pathname); } catch (_) {}
+
+            // 7. The document itself. document.open() + write + close() replaces
+            //    the entire document — head, body, all listeners, all timers.
+            //    The URL in the bar stays put; the page behind it is gone.
+            try {
+                document.open();
+                document.write(
+                    '<!DOCTYPE html>' +
+                    '<html lang="en">' +
+                    '<head>' +
+                    '<meta charset="UTF-8">' +
+                    '<meta name="viewport" content="width=device-width,initial-scale=1">' +
+                    '<title></title>' +
+                    '</head>' +
+                    '<body style="background:#000;margin:0;cursor:default;overflow:hidden;"></body>' +
+                    '</html>'
+                );
+                document.close();
+            } catch (_) {
+                // Fallback if document.write is blocked.
                 document.body.innerHTML = '';
-                document.body.removeAttribute('style');
                 document.body.style.cssText = 'background:#000;margin:0;cursor:default;';
                 document.documentElement.style.cssText = 'background:#000;';
                 document.title = '';
                 window.scrollTo(0, 0);
-            }, ERASE_MS + 500);
+            }
         }
     });
 })();

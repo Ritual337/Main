@@ -837,6 +837,14 @@ footer .footer-inner { opacity: 0; transform: translateY(26px); }
     80%  { transform: translate(2px, 1px); text-shadow: 2px 0 #f00, -2px 0 #0ff; }
     100% { transform: translate(0); text-shadow: none; }
 }
+/* Ritual sequence: total freeze. Nothing on the page can be clicked,
+   hovered, focused, or opened from the moment "ritual" is typed until
+   the page is blacked out. */
+body.ritual-active,
+body.ritual-active * {
+    pointer-events: none !important;
+    user-select: none;
+}
 
 /* ===== card overlay ===== */
 .card-overlay .card-scene { width: 360px; height: 244px; position: relative; perspective: 1100px; }
@@ -992,7 +1000,7 @@ footer .footer-inner { opacity: 0; transform: translateY(26px); }
     opacity: 0 !important;
     filter: blur(7px) brightness(0);
     transform: translateY(-10px) scale(.985);
-    clip-path: inset(0 0 100% 0);
+    clip-path: inset(100% 0 0 0);
     pointer-events: none;
 }
 
