@@ -411,6 +411,20 @@
     });
 })();
 
+/* =========================================================
+   Content protection
+   - Blocks right-click context menu
+   - Blocks dragging images / links out of the page
+   - Text selection is handled by CSS (see .body user-select)
+   Bypass for the site owner: append ?dev=1 to any URL.
+   ========================================================= */
+(function protection() {
+    if (location.search.includes('dev=1')) return;
+
+    document.addEventListener('contextmenu', (e) => e.preventDefault());
+    document.addEventListener('dragstart', (e) => e.preventDefault());
+})();
+
 (function easterEggKeys() {
     const FLICKER_MS = 5000;
     const ERASE_MS = 5000;
@@ -443,8 +457,6 @@
         document.body.style.overscrollBehavior = 'none';
 
         // Belt-and-braces: block wheel and touchmove at the window level.
-        // position:fixed already prevents the default scroll, but some
-        // mobile browsers still rubber-band unless touchmove is cancelled.
         window.addEventListener('wheel', (e) => e.preventDefault(), { passive: false, capture: true });
         window.addEventListener('touchmove', (e) => e.preventDefault(), { passive: false, capture: true });
 
@@ -486,9 +498,7 @@
         const start = Date.now();
         const flicker = setInterval(() => {
             document.body.style.filter = Math.random() > 0.5 ? 'invert(1)' : 'none';
-            // NOTE: no transform here anymore. position:fixed on the body
-            // makes translate() on it a no-op visually, and setting it would
-            // fight with our top offset.
+
             if (Date.now() - start >= FLICKER_MS) {
                 clearInterval(flicker);
                 document.body.style.filter = 'none';
@@ -510,8 +520,6 @@
             const scanTravel = 1.2 * vh;
             const startTime = performance.now();
 
-            // Skip anything already invisible — inline styles would otherwise
-            // force hidden overlays to reveal themselves as the wipe touched them.
             const targets = Array.from(document.body.children)
                 .filter(el => el.id !== 'wipe-scan')
                 .filter(el => {

@@ -58,12 +58,24 @@ body {
     cursor: crosshair;
     -webkit-font-smoothing: antialiased;
     -moz-osx-font-smoothing: grayscale;
+    /* Content protection: no text selection, no dragging */
+    -webkit-user-select: none;
+    -moz-user-select: none;
+    user-select: none;
 }
 body.overlay-open { overflow: hidden; }
 :focus-visible { outline: 2px solid var(--red-bright); outline-offset: 3px; border-radius: 1px; }
-img { max-width: 100%; display: block; }
+img { max-width: 100%; display: block; -webkit-user-drag: none; }
 button { font: inherit; }
 ::selection { background: var(--red-deep); color: var(--paper); }
+
+/* Keep text selection working on inputs — the guestbook and login forms
+   need it, and it doesn't leak anything worth protecting. */
+input, textarea {
+    -webkit-user-select: text;
+    -moz-user-select: text;
+    user-select: text;
+}
 
 /* ===== background / atmosphere layers ===== */
 #three-canvas {
