@@ -418,6 +418,43 @@
     let buf = '';
     let active = false;
 
+    // Scroll-lock helper. Called once, at ritual trigger. Freezes the page
+    // at its current scroll position and kills every scrolling vector:
+    // the smooth-scroll engine, wheel, touch, keyboard, and the scrollbars
+    // themselves.
+    function lockScroll() {
+        // Stop Lenis if it's running. Without this, Lenis keeps translating
+        // the content on wheel/touch even when pointer-events are off.
+        try { if (window.__lenis && typeof window.__lenis.stop === 'function') window.__lenis.stop(); } catch (_) {}
+
+        // Pin the body in place. Setting position:fixed with a negative top
+        // offset equal to the current scrollY is the standard "freeze in place"
+        // pattern — the browser stops being able to scroll anything, and the
+        // content stays visually where it was (no jump to top).
+        const y = window.scrollY || window.pageYOffset || 0;
+        document.documentElement.style.overflow = 'hidden';
+        document.documentElement.style.overscrollBehavior = 'none';
+        document.body.style.position = 'fixed';
+        document.body.style.top = `-${y}px`;
+        document.body.style.left = '0';
+        document.body.style.right = '0';
+        document.body.style.width = '100%';
+        document.body.style.overflow = 'hidden';
+        document.body.style.overscrollBehavior = 'none';
+
+        // Belt-and-braces: block wheel and touchmove at the window level.
+        // position:fixed already prevents the default scroll, but some
+        // mobile browsers still rubber-band unless touchmove is cancelled.
+        window.addEventListener('wheel', (e) => e.preventDefault(), { passive: false, capture: true });
+        window.addEventListener('touchmove', (e) => e.preventDefault(), { passive: false, capture: true });
+
+        // Block keyboard scrolling. Space, arrows, PageUp/Down, Home/End.
+        const SCROLL_KEYS = new Set([' ', 'ArrowUp', 'ArrowDown', 'ArrowLeft', 'ArrowRight', 'PageUp', 'PageDown', 'Home', 'End']);
+        document.addEventListener('keydown', (e) => {
+            if (SCROLL_KEYS.has(e.key)) e.preventDefault();
+        }, { passive: false });
+    }
+
     document.addEventListener('keydown', (e) => {
         if (active) return;
         if (e.key.length !== 1) return;
@@ -439,8 +476,9 @@
             document.activeElement.blur();
         }
 
-        // Freeze the page — no clicks, hovers, or focus for the duration.
+        // Freeze the page — no clicks, hovers, focus, or scrolling.
         document.body.classList.add('ritual-active');
+        lockScroll();
 
         window.showToast?.('you found it. hi.', { duration: FLICKER_MS });
         document.body.classList.add('ritual-glitch');
@@ -448,14 +486,12 @@
         const start = Date.now();
         const flicker = setInterval(() => {
             document.body.style.filter = Math.random() > 0.5 ? 'invert(1)' : 'none';
-            document.body.style.transform = Math.random() > 0.7
-                ? `translate(${Math.random() * 8 - 4}px, ${Math.random() * 8 - 4}px)`
-                : 'none';
-
+            // NOTE: no transform here anymore. position:fixed on the body
+            // makes translate() on it a no-op visually, and setting it would
+            // fight with our top offset.
             if (Date.now() - start >= FLICKER_MS) {
                 clearInterval(flicker);
                 document.body.style.filter = 'none';
-                document.body.style.transform = 'none';
                 document.body.classList.remove('ritual-glitch');
                 beginErase();
             }
@@ -527,26 +563,17 @@
             requestAnimationFrame(tick);
         }
 
-        // ---- The real client-side delete -----------------------------------
-        // Everything the browser was holding for this origin goes. Storage,
-        // caches, service workers, cookies, then the document itself.
         async function wipeEverything() {
-            // Small pause so the last frame of the scan has time to render.
             await new Promise(r => setTimeout(r, 400));
 
-            // 1. localStorage — audit logs, gallery layout, anything else.
             try { localStorage.clear(); } catch (_) {}
-
-            // 2. sessionStorage — admin token, gallery token, lockout timers.
             try { sessionStorage.clear(); } catch (_) {}
 
-            // 3. Cache Storage — Cloudflare Pages caches HTML/JS/CSS here.
             try {
                 const keys = await caches.keys();
                 await Promise.all(keys.map(k => caches.delete(k)));
             } catch (_) {}
 
-            // 4. Service workers — none registered, but clear any stragglers.
             try {
                 if ('serviceWorker' in navigator) {
                     const regs = await navigator.serviceWorker.getRegistrations();
@@ -554,7 +581,6 @@
                 }
             } catch (_) {}
 
-            // 5. Cookies — expiry-hijack each one.
             try {
                 document.cookie.split(';').forEach(c => {
                     const name = c.replace(/^ +/, '').split('=')[0];
@@ -563,12 +589,8 @@
                 });
             } catch (_) {}
 
-            // 6. Strip any URL query params (deep-linked ?image=... etc).
             try { history.replaceState({}, '', location.pathname); } catch (_) {}
 
-            // 7. The document itself. document.open() + write + close() replaces
-            //    the entire document — head, body, all listeners, all timers.
-            //    The URL in the bar stays put; the page behind it is gone.
             try {
                 document.open();
                 document.write(
@@ -584,8 +606,8 @@
                 );
                 document.close();
             } catch (_) {
-                // Fallback if document.write is blocked.
                 document.body.innerHTML = '';
+                document.body.removeAttribute('style');
                 document.body.style.cssText = 'background:#000;margin:0;cursor:default;';
                 document.documentElement.style.cssText = 'background:#000;';
                 document.title = '';

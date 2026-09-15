@@ -839,11 +839,19 @@ footer .footer-inner { opacity: 0; transform: translateY(26px); }
 }
 /* Ritual sequence: total freeze. Nothing on the page can be clicked,
    hovered, focused, or opened from the moment "ritual" is typed until
-   the page is blacked out. */
+   the page is blacked out. Scrolling is also killed. */
 body.ritual-active,
 body.ritual-active * {
     pointer-events: none !important;
     user-select: none;
+}
+body.ritual-active {
+    overflow: hidden !important;
+    overscroll-behavior: none;
+}
+html:has(body.ritual-active) {
+    overflow: hidden !important;
+    overscroll-behavior: none;
 }
 
 /* ===== card overlay ===== */
